@@ -30,7 +30,7 @@
 }
 
 .sidebar {
-  width: 70px;
+  width: 90px;
   height: 100vh;
   position: fixed;
   top: 0;
@@ -48,8 +48,18 @@
   overflow: hidden;
   font-family: 'Marcellus', serif;
 
+  /* Hide scrollbars for the entire sidebar */
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+  
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+
   &:not(.collapsed) {
-    width: 240px;
+    width: 280px;
     
     &::after {
       content: '';
@@ -130,15 +140,16 @@
     flex: 1;
     padding: 24px 0;
     overflow-y: auto;
-    /* 自定义滚动条 */
+    
+    /* Hide scrollbars but keep scrolling functionality */
     &::-webkit-scrollbar {
-      width: 4px;
+      width: 0;
+      height: 0;
+      display: none;
     }
     
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(230, 182, 85, 0.4);
-      border-radius: 2px;
-    }
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
 
     .nav-item {
       margin-bottom: 8px;
@@ -213,37 +224,51 @@
   }
 
   .footer {
-    border-top: 1px solid rgba(230, 182, 85, 0.3);
     padding: 16px;
     position: relative;
     
+    /* Top border */
     &::before {
       content: '';
       position: absolute;
       top: 0;
+      left: 10%;
+      right: 10%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(230, 182, 85, 0.3), transparent);
+    }
+    
+    /* Add decorative bottom line */
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(to right, transparent, @accent-gold, transparent);
+      height: 3px;
+      background: linear-gradient(to right, transparent, @text-light, transparent);
+      opacity: 0.4;
     }
 
     .sign-out-btn {
       width: 100%;
       display: flex;
       align-items: center;
-      padding: 10px 16px;
-      color: #ff6b6b;
-      background-color: rgba(255, 107, 107, 0.05);
-      border: 1px solid rgba(255, 107, 107, 0.2);
+      justify-content: center;
+      padding: 10px;
+      color: @accent-gold;
+      background-color: rgba(22, 33, 62, 0.7);
+      border: 1px solid rgba(230, 182, 85, 0.3);
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.3s ease;
       font-family: 'Marcellus', serif;
 
       &:hover {
-        background-color: rgba(255, 107, 107, 0.1);
-        border-color: rgba(255, 107, 107, 0.4);
-        box-shadow: 0 0 10px rgba(255, 107, 107, 0.3);
+        background-color: rgba(230, 182, 85, 0.15);
+        border-color: rgba(230, 182, 85, 0.6);
+        box-shadow: 0 0 10px rgba(230, 182, 85, 0.3);
+        color: @accent-glow;
       }
 
       .icon-container {
@@ -257,16 +282,28 @@
   }
 }
 
+/* Remove main content scrollbar as well */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
 // 为主内容区域添加样式
 .main-content {
-  padding-left: 240px;
+  padding-left: 280px;
   transition: padding-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   background-color: #f8f5ec;
   background-color: #f8f5ec;
   background-blend-mode: overlay;
 
   &.sidebar-collapsed {
-    padding-left: 70px;
+    padding-left: 90px;
   }
   
   h1, h2, h3, h4, h5, h6 {
