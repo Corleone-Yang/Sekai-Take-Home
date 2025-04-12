@@ -64,9 +64,7 @@ export default function Home() {
       <Sidebar />
       <main className="flex-1 main-content">
         <div className="p-8">
-          <h1 className="text-3xl font-bold mb-4 text-gray-800">
-            D&D-Style Interactive Adventure
-          </h1>
+          <h1 className="text-3xl font-bold mb-4 text-gray-800">Dashboard</h1>
           <p className="text-lg mb-8 text-gray-700">
             Embark on an AI-powered text adventure where your choices matter.
           </p>
