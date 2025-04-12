@@ -18,7 +18,7 @@ export default function Login() {
         } = await supabase.auth.getSession();
         if (session) {
           // User is already logged in, redirect to adventure page
-          router.push("/adventure");
+          router.push("/");
         }
       } catch (error) {
         console.error("Error checking session:", error);
@@ -31,7 +31,7 @@ export default function Login() {
   }, [router]);
 
   const handleAuth = () => {
-    router.push("/adventure");
+    router.push("/");
   };
 
   if (isLoading) {
@@ -44,13 +44,11 @@ export default function Login() {
 
   return (
     <div className="page-container">
-      {/* 视频背景 */}
       <video autoPlay loop muted className="video-background">
-        <source src="/signin.mp4" type="video/mp4" />
+        <source src="/images/anime/Login.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* 内容层 */}
       <div className="content-card">
         <h1 className="page-title">D&D-Style Interactive Adventure</h1>
         <p className="page-description">

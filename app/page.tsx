@@ -59,7 +59,16 @@ export default function Home() {
 
   // if user is logged in, show the home page
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-8">
+    <div className="flex min-h-screen flex-col items-center justify-center p-8 relative">
+      <button
+        onClick={async () => {
+          await supabase.auth.signOut();
+          router.push("/pages/login");
+        }}
+        className="absolute top-4 right-4 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors"
+      >
+        Sign Out
+      </button>
       <div className="w-full max-w-4xl bg-white p-8 rounded-lg shadow-lg">
         <h1 className="text-4xl font-bold mb-6 text-center">
           D&D-Style Interactive Adventure

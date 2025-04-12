@@ -22,13 +22,16 @@
 
 .page-container {
   display: flex;
-  min-height: 90vh;
+  min-height: 100vh;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 0;
   position: relative;
   overflow: hidden;
+  margin: 0;
+  width: 100%;
+  height: 100%;
 }
 
 
@@ -40,13 +43,11 @@
 
 // 视频背景
 .video-background {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   z-index: 0;
   object-fit: cover;
   filter: brightness(0.5);
