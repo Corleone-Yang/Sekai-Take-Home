@@ -45,7 +45,7 @@ export default function Login() {
   return (
     <div className="page-container">
       <video autoPlay loop muted className="video-background">
-        <source src="/images/anime/Login.mp4" type="video/mp4" />
+        <source src="/anime/Login.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 

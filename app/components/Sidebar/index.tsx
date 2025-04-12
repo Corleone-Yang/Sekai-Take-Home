@@ -38,7 +38,7 @@ const Sidebar = () => {
   return (
     <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <div className="header-container">
-        {!collapsed && <div className="sidebar-title">SEKAI App</div>}
+        {!collapsed && <div className="sidebar-title">SEKAI APP</div>}
         <button
           onClick={toggleCollapse}
           className={`toggle-btn ${collapsed ? "collapsed" : ""}`}
@@ -61,7 +61,7 @@ const Sidebar = () => {
         </div>
 
         <div className="nav-item">
-          <Link href="/todos" className="nav-link">
+          <Link href="/pages/createStory" className="nav-link">
             <span className="icon-container">
               <BiBookAlt />
             </span>
@@ -70,7 +70,7 @@ const Sidebar = () => {
         </div>
 
         <div className="nav-item">
-          <Link href="/settings" className="nav-link">
+          <Link href="/pages/playGame" className="nav-link">
             <span className="icon-container">
               <IoGameControllerOutline />
             </span>
