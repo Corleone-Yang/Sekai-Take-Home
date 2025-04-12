@@ -29,7 +29,7 @@ const Sidebar = () => {
     <>
       <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
         <div className="header-container">
-          {!collapsed && <div className="sidebar-title">Todo App</div>}
+          {!collapsed && <div className="sidebar-title">SEKAI App</div>}
           <button
             onClick={toggleCollapse}
             className={`toggle-btn ${collapsed ? "collapsed" : ""}`}
@@ -56,7 +56,7 @@ const Sidebar = () => {
               <span className="icon-container">
                 <AiOutlineCheckSquare />
               </span>
-              {!collapsed && <span>Todos</span>}
+              {!collapsed && <span>Create Story</span>}
             </Link>
           </div>
 
@@ -65,7 +65,7 @@ const Sidebar = () => {
               <span className="icon-container">
                 <AiOutlineSetting />
               </span>
-              {!collapsed && <span>Settings</span>}
+              {!collapsed && <span>Play Game</span>}
             </Link>
           </div>
         </nav>
@@ -79,9 +79,9 @@ const Sidebar = () => {
           </button>
         </div>
       </div>
-      <div className={`main-content ${collapsed ? "sidebar-collapsed" : ""}`}>
-        {/* Main content will be rendered here */}
-      </div>
+      <div
+        className={`main-content ${collapsed ? "sidebar-collapsed" : ""}`}
+      ></div>
     </>
   );
 };
