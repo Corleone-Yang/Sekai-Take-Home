@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import { getCurrentUser } from "../../config/supabase";
+import "./page.less";
 
 export default function CreateStory() {
   const [title, setTitle] = useState("");
@@ -19,10 +20,10 @@ export default function CreateStory() {
     async function fetchUser() {
       const user = await getCurrentUser();
       if (user) {
-        console.log("Current user:", user.id); // 添加日志以便调试
+        console.log("Current user:", user.id); // Add log for debugging
         setUserId(user.id);
       } else {
-        // 如果用户未登录，显示错误
+        // If user is not logged in, show error
         setMessage({
           text: "Please login to create a story",
           type: "error",
@@ -45,6 +46,31 @@ export default function CreateStory() {
       setCharacters(newCharacters);
     }
   }, [step, characterNum]);
+
+  // Create style element with responsive behavior CSS
+  useEffect(() => {
+    // Create style element
+    const style = document.createElement("style");
+    style.textContent = `
+      /* Preserve responsive behavior */
+      .main-content {
+        padding-left: 280px;
+        transition: padding-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      
+      body.sidebar-collapsed .main-content {
+        padding-left: 90px;
+      }
+    `;
+
+    // Add to document head
+    document.head.appendChild(style);
+
+    // Remove when component unmounts
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   const handleStorySubmit = (e) => {
     e.preventDefault();
@@ -136,21 +162,19 @@ export default function CreateStory() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen fantasy-page">
       <Sidebar />
-      <main className="flex-1 main-content">
+      <main className="flex-1 main-content fantasy-content">
         <div className="p-8">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+          <h1 className="text-3xl font-bold mb-6 heading-style">
             Create Story
           </h1>
 
           {message.text && (
             <div
-              className={`p-4 mb-6 rounded-md ${
-                message.type === "error"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-green-100 text-green-700"
-              }`}
+              className={
+                message.type === "error" ? "error-message" : "success-message"
+              }
             >
               {message.text}
             </div>
@@ -158,50 +182,38 @@ export default function CreateStory() {
 
           <div className="mb-6">
             <div className="flex items-center">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step === 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-300 text-gray-700"
-                } font-semibold mr-2`}
-              >
+              <div className={step === 1 ? "active-step" : "inactive-step"}>
                 1
               </div>
               <div
-                className={`text-sm ${
-                  step === 1 ? "text-blue-600 font-semibold" : "text-gray-500"
-                }`}
+                className={
+                  step === 1 ? "text-[#8b6a43] font-bold" : "text-[#917140]"
+                }
               >
                 Story Details
               </div>
-              <div className="border-t border-gray-300 flex-1 mx-4"></div>
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                  step === 2
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-300 text-gray-700"
-                } font-semibold mr-2`}
-              >
+              <div className="step-divider"></div>
+              <div className={step === 2 ? "active-step" : "inactive-step"}>
                 2
               </div>
               <div
-                className={`text-sm ${
-                  step === 2 ? "text-blue-600 font-semibold" : "text-gray-500"
-                }`}
+                className={
+                  step === 2 ? "text-[#8b6a43] font-bold" : "text-[#917140]"
+                }
               >
                 Character Details
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-lg shadow-md">
+          <div className="form-container p-6">
             {step === 1 ? (
               <form onSubmit={handleStorySubmit}>
                 <table className="w-full border-collapse mb-6">
                   <tbody>
-                    <tr className="border-b">
-                      <td className="py-4 pr-4 font-medium text-gray-700 w-1/4">
-                        Title <span className="text-red-500">*</span>
+                    <tr className="fantasy-table-row">
+                      <td className="py-4 pr-4 w-1/4 form-label">
+                        Title <span className="text-[#cc785e]">*</span>
                       </td>
                       <td className="py-4">
                         <input
@@ -209,28 +221,26 @@ export default function CreateStory() {
                           value={title}
                           onChange={(e) => setTitle(e.target.value)}
                           placeholder="Enter story title"
-                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="fantasy-input"
                           required
                         />
                       </td>
                     </tr>
-                    <tr className="border-b">
-                      <td className="py-4 pr-4 font-medium text-gray-700">
-                        Background
-                      </td>
+                    <tr className="fantasy-table-row">
+                      <td className="py-4 pr-4 form-label">Background</td>
                       <td className="py-4">
                         <textarea
                           value={background}
                           onChange={(e) => setBackground(e.target.value)}
                           placeholder="Enter story background (optional)"
-                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+                          className="fantasy-textarea"
                         />
                       </td>
                     </tr>
-                    <tr className="border-b">
-                      <td className="py-4 pr-4 font-medium text-gray-700">
+                    <tr className="fantasy-table-row">
+                      <td className="py-4 pr-4 form-label">
                         Number of Characters{" "}
-                        <span className="text-red-500">*</span>
+                        <span className="text-[#cc785e]">*</span>
                       </td>
                       <td className="py-4">
                         <input
@@ -241,10 +251,10 @@ export default function CreateStory() {
                           onChange={(e) =>
                             setCharacterNum(parseInt(e.target.value) || 1)
                           }
-                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="fantasy-input"
                           required
                         />
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-[#5b3a1c] mt-1">
                           Choose how many characters will be in your story
                           (1-10)
                         </p>
@@ -254,36 +264,30 @@ export default function CreateStory() {
                 </table>
 
                 <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
+                  <button type="submit" className="primary-button">
                     Next: Character Details
                   </button>
                 </div>
               </form>
             ) : (
               <form onSubmit={handleFinalSubmit}>
-                <h2 className="text-xl font-semibold mb-4">
+                <h2 className="text-xl font-semibold mb-4 character-title">
                   Character Details
                 </h2>
-                <p className="text-gray-600 mb-6">
+                <p className="text-[#5b3a1c] mb-6">
                   Please fill in the details for each character in your story.
                 </p>
 
                 {characters.map((character, index) => (
-                  <div
-                    key={index}
-                    className="mb-8 p-4 border border-gray-200 rounded-lg"
-                  >
-                    <h3 className="text-lg font-medium mb-3">
+                  <div key={index} className="character-card">
+                    <h3 className="text-lg font-medium mb-3 character-title">
                       Character {index + 1}
                     </h3>
                     <table className="w-full border-collapse">
                       <tbody>
-                        <tr className="border-b">
-                          <td className="py-3 pr-4 font-medium text-gray-700 w-1/4">
-                            Name <span className="text-red-500">*</span>
+                        <tr className="fantasy-table-row">
+                          <td className="py-3 pr-4 w-1/4 form-label">
+                            Name <span className="text-[#cc785e]">*</span>
                           </td>
                           <td className="py-3">
                             <input
@@ -297,13 +301,13 @@ export default function CreateStory() {
                                 )
                               }
                               placeholder="Enter character name"
-                              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="fantasy-input"
                               required
                             />
                           </td>
                         </tr>
-                        <tr className="border-b">
-                          <td className="py-3 pr-4 font-medium text-gray-700">
+                        <tr className="fantasy-table-row">
+                          <td className="py-3 pr-4 form-label">
                             Character Traits
                           </td>
                           <td className="py-3">
@@ -317,14 +321,13 @@ export default function CreateStory() {
                                 )
                               }
                               placeholder="Describe the character's traits (optional)"
-                              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                              className="fantasy-textarea"
+                              style={{ minHeight: "80px" }}
                             />
                           </td>
                         </tr>
-                        <tr className="border-b">
-                          <td className="py-3 pr-4 font-medium text-gray-700">
-                            Background
-                          </td>
+                        <tr className="fantasy-table-row">
+                          <td className="py-3 pr-4 form-label">Background</td>
                           <td className="py-3">
                             <textarea
                               value={character.background}
@@ -336,7 +339,8 @@ export default function CreateStory() {
                                 )
                               }
                               placeholder="Describe the character's background (optional)"
-                              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+                              className="fantasy-textarea"
+                              style={{ minHeight: "80px" }}
                             />
                           </td>
                         </tr>
@@ -349,14 +353,14 @@ export default function CreateStory() {
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="px-6 py-2 rounded-md border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    className="secondary-button"
                   >
                     Back to Story Details
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`px-6 py-2 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`primary-button ${
                       loading ? "opacity-70 cursor-not-allowed" : ""
                     }`}
                   >

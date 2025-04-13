@@ -1,0 +1,166 @@
+.fantasy-page {
+  /* Use plain parchment background without gift boxes */
+  background-color: #f5e9d0;
+  /* Use simple background pattern to avoid webpack errors */
+  background-image: linear-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px), 
+                    linear-gradient(90deg, rgba(255, 255, 255, 0.3) 1px, transparent 1px);
+  background-size: 20px 20px;
+  font-family: 'Bookman Old Style', Georgia, serif;
+  min-height: 100vh;
+}
+
+.fantasy-content {
+  background-color: rgba(255, 252, 240, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(128, 99, 57, 0.2);
+  margin: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heading-style {
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  color: #5b3a1c;
+  text-shadow: 1px 1px 2px rgba(150, 122, 78, 0.3);
+  border-bottom: 2px solid #d4b98c;
+  padding-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.form-container {
+  background-color: rgba(255, 252, 245, 0.7);
+  border: 1px solid #d4b98c;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(139, 106, 67, 0.1);
+  transition: all 0.3s ease;
+}
+
+.active-step {
+  background-color: #8b6a43;
+  color: #fffaea;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #d4b98c;
+  box-shadow: 0 0 0 3px rgba(139, 106, 67, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.inactive-step {
+  background-color: #d4c4a7;
+  color: #5b3a1c;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #d4b98c;
+  box-shadow: 0 0 0 3px rgba(139, 106, 67, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.step-divider {
+  height: 2px;
+  background: linear-gradient(to right, #d4b98c, transparent);
+  flex: 1;
+  margin: 0 12px;
+}
+
+.primary-button {
+  background: linear-gradient(to bottom, #8b6a43, #634c2e);
+  color: #fffaea;
+  border: 2px solid #8b6a43;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  padding: 8px 16px;
+}
+
+.secondary-button {
+  background: linear-gradient(to bottom, #ede3d0, #d4c4a7);
+  color: #5b3a1c;
+  border: 2px solid #c4aa78;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  padding: 8px 16px;
+}
+
+.character-card {
+  border: 1px solid #d4b98c;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: rgba(255, 252, 240, 0.7);
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fantasy-input {
+  background-color: rgba(255, 252, 245, 0.9);
+  border: 1px solid #c4aa78;
+  border-radius: 6px;
+  padding: 12px;
+  width: 100%;
+  color: #3a2921;
+}
+
+.fantasy-textarea {
+  background-color: rgba(255, 252, 245, 0.9);
+  border: 1px solid #c4aa78;
+  border-radius: 6px;
+  padding: 12px;
+  width: 100%;
+  color: #3a2921;
+  min-height: 100px;
+}
+
+.fantasy-table-row {
+  border-bottom: 1px solid #e6d6b8;
+}
+
+.form-label {
+  color: #5b3a1c;
+  font-weight: 600;
+}
+
+.character-title {
+  color: #5b3a1c;
+  font-family: 'Cinzel', 'Times New Roman', serif;
+  font-size: 1.2rem;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e6d6b8;
+  padding-bottom: 8px;
+}
+
+.error-message {
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 6px;
+  background-color: rgba(204, 120, 94, 0.2);
+  border-left: 4px solid #cc785e;
+  color: #8c3a2a;
+}
+
+.success-message {
+  padding: 16px;
+  margin-bottom: 24px;
+  border-radius: 6px;
+  background-color: rgba(127, 166, 80, 0.2);
+  border-left: 4px solid #7fa650;
+  color: #4a652c;
+} 
