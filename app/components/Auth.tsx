@@ -108,13 +108,19 @@ export default function Auth({ onAuth }: AuthProps) {
           </div>
         </div>
 
-        <button type="submit" className="auth-submit-button" disabled={loading}>
-          {loading
-            ? "Casting Spell..."
-            : isSignUp
-            ? "Begin Your Quest"
-            : "Enter the Realm"}
-        </button>
+        <div className="auth-button-container">
+          <button
+            type="submit"
+            className="auth-submit-button"
+            disabled={loading}
+          >
+            {loading
+              ? "Casting Spell..."
+              : isSignUp
+              ? "Begin Your Quest"
+              : "Enter the Realm"}
+          </button>
+        </div>
       </form>
 
       <div className="auth-toggle">
