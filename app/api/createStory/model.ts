@@ -20,6 +20,7 @@ export interface Character {
   background: string | null;
   created_at: Date;
   updated_at: Date;
+  isplayer?: boolean;
 }
 
 // Create story request interface

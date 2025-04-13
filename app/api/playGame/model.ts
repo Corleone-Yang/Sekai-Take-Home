@@ -93,6 +93,8 @@ export interface SendMessageRequest {
   game_session_id: UUID;
   message: string;
   character_info?: CharacterInfo; // Optional character info for test sessions
+  story_id?: UUID; // Optional story ID for test sessions
+  player_character_id?: UUID; // Optional player character ID for test sessions
 }
 
 export interface SendMessageResponse {

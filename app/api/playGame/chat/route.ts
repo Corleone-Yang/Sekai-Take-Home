@@ -26,92 +26,132 @@ export async function POST(request: NextRequest) {
     // If this is a direct message test without a game session
     if (body.game_session_id === "test-session-id") {
       try {
-        // Initialize with generic character names
-        let firstCharacter = {
-          character_id: "test-character-id-1",
-          character_name: "Character 1", // Generic name instead of hardcoded
-          content: "",
-          timestamp: new Date(),
-        };
+        // Get story information if available in the request
+        const storyId = body.story_id;
+        const playerCharacterId = body.player_character_id;
 
-        let secondCharacter = {
-          character_id: "test-character-id-2",
-          character_name: "Character 2", // Generic name instead of hardcoded
-          content: "",
-          timestamp: new Date(Date.now() + 1000),
-        };
+        // Variables to store character and story information
+        let storyInfo = null;
+        let allCharacters = [];
+        let npcCharacters = [];
 
-        // Use character info from request body if available
-        if (
-          body.character_info &&
-          body.character_info.npc_characters &&
-          body.character_info.npc_characters.length > 0
-        ) {
-          if (body.character_info.npc_characters[0]) {
-            firstCharacter.character_id =
-              body.character_info.npc_characters[0].id ||
-              firstCharacter.character_id;
-            firstCharacter.character_name =
-              body.character_info.npc_characters[0].name ||
-              firstCharacter.character_name;
-          }
-
-          if (body.character_info.npc_characters[1]) {
-            secondCharacter.character_id =
-              body.character_info.npc_characters[1].id ||
-              secondCharacter.character_id;
-            secondCharacter.character_name =
-              body.character_info.npc_characters[1].name ||
-              secondCharacter.character_name;
-          }
-        }
-
-        // Always try to get real characters from database regardless of request info
+        // Try to get real story and characters from database
         try {
-          // Try to find a story with family/parent-related characters
-          const { data: stories, error: storyError } = await supabaseAdmin
-            .from("stories")
-            .select("*")
-            .limit(5); // Get a few stories to find better matching ones
+          // If story_id is provided, get that specific story
+          if (storyId) {
+            const { data: story, error: storyError } = await supabaseAdmin
+              .from("stories")
+              .select("*")
+              .eq("story_id", storyId)
+              .single();
 
-          if (!storyError && stories && stories.length > 0) {
-            // Loop through stories to find appropriate characters
-            for (const story of stories) {
+            if (!storyError && story) {
+              storyInfo = story;
+
+              // Get all characters for this story
               const { data: characters, error: charError } = await supabaseAdmin
                 .from("characters")
                 .select("*")
-                .eq("story_id", story.story_id);
+                .eq("story_id", storyId);
 
-              if (!charError && characters && characters.length > 1) {
-                // If we have multiple characters in a story, use them
-                if (characters[0]) {
-                  firstCharacter.character_id = characters[0].character_id;
-                  firstCharacter.character_name = characters[0].name;
+              if (!charError && characters && characters.length > 0) {
+                allCharacters = characters;
+
+                // Filter out player character if specified
+                if (playerCharacterId) {
+                  npcCharacters = characters.filter(
+                    (char) => char.character_id !== playerCharacterId
+                  );
+                } else {
+                  // 如果没有指定玩家角色ID，则检查isplayer标志
+                  npcCharacters = characters.filter(
+                    (char) => char.isplayer !== true
+                  );
                 }
+              }
+            }
+          } else {
+            // If no specific story, get a random one with multiple characters
+            const { data: stories, error: storyError } = await supabaseAdmin
+              .from("stories")
+              .select("*")
+              .order("character_num", { ascending: false }) // Prefer stories with more characters
+              .limit(5);
 
-                if (characters[1]) {
-                  secondCharacter.character_id = characters[1].character_id;
-                  secondCharacter.character_name = characters[1].name;
+            if (!storyError && stories && stories.length > 0) {
+              // Find a story with multiple characters
+              for (const story of stories) {
+                const { data: characters, error: charError } =
+                  await supabaseAdmin
+                    .from("characters")
+                    .select("*")
+                    .eq("story_id", story.story_id);
+
+                if (!charError && characters && characters.length > 1) {
+                  storyInfo = story;
+                  allCharacters = characters;
+                  npcCharacters = characters;
+                  break;
                 }
-
-                // Exit the loop once we've found suitable characters
-                break;
               }
             }
           }
         } catch (dbError) {
-          console.error("Error fetching characters from database:", dbError);
-          // Continue with generic character names if DB fails
+          console.error(
+            "Error fetching story/characters from database:",
+            dbError
+          );
         }
+
+        // If no characters found in database, use request info or default values
+        if (npcCharacters.length === 0) {
+          // Use character info from request body if available
+          if (
+            body.character_info &&
+            body.character_info.npc_characters &&
+            body.character_info.npc_characters.length > 0
+          ) {
+            npcCharacters = body.character_info.npc_characters.map((char) => ({
+              character_id: char.id,
+              name: char.name,
+            }));
+          } else {
+            // Default to two generic characters
+            npcCharacters = [
+              {
+                character_id: "test-character-id-1",
+                name: "Character 1",
+              },
+              {
+                character_id: "test-character-id-2",
+                name: "Character 2",
+              },
+            ];
+          }
+        }
+
+        // Add some console logging for debugging
+        console.log("Player character ID:", playerCharacterId);
+        console.log(
+          "NPC characters:",
+          npcCharacters.map((c) => `${c.name} (${c.character_id})`).join(", ")
+        );
+
+        // Determine how many NPCs should respond (all available NPCs)
+        const responseCount = npcCharacters.length;
+
+        // Generate the prompt for Gemini based on available characters
+        const characterList = npcCharacters
+          .map((char) => `- ${char.name}`)
+          .join("\n");
 
         // Generate a direct response using appropriate character roles
         const prompt = `
 You are simulating characters in an interactive conversation.
-The player is roleplaying as another character and you are generating responses for these characters.
+The player is roleplaying as a character and you are generating responses for ${responseCount} other characters.
 
-Create responses for these two characters:
-- ${firstCharacter.character_name}
-- ${secondCharacter.character_name}
+Create responses for these characters:
+${characterList}
 
 Character responses should reflect:
 - A personality that matches their name and likely role in the story
@@ -123,24 +163,31 @@ IMPORTANT:
 - Respond in first person as each character
 - Keep responses conversational and brief (1-3 sentences each)
 - Do not include character names as labels - the system will add them automatically
-- Format as two separate paragraphs, one for each character
+- Format as ${responseCount} separate paragraphs, one for each character in the order listed above
 `;
 
         const geminiResponse = await generateGeminiResponse(prompt);
 
-        // Split the gemini response to create responses from two different characters
+        // Split the gemini response into separate character responses
         const responseLines = geminiResponse.split("\n\n");
 
-        // Update the character responses with the content from Gemini
-        firstCharacter.content =
-          responseLines[0] ||
-          geminiResponse.substring(0, geminiResponse.length / 2);
-        secondCharacter.content =
-          responseLines[1] ||
-          "I find this all quite amusing! Let me show you around, but don't be surprised if we run into some... unexpected adventures.";
+        // Create response objects for each NPC character
+        const characterResponses = npcCharacters.map((char, index) => {
+          // Get the corresponding response text, or generate a fallback if missing
+          const responseText =
+            responseLines[index] ||
+            `I'm ${char.name}. I'm here to interact with you in this story.`;
+
+          return {
+            character_id: char.character_id,
+            character_name: char.name,
+            content: responseText,
+            timestamp: new Date(Date.now() + index * 500), // Stagger timestamps
+          };
+        });
 
         return NextResponse.json({
-          responses: [firstCharacter, secondCharacter],
+          responses: characterResponses,
         });
       } catch (geminiError) {
         console.error("Error using Gemini for test message:", geminiError);

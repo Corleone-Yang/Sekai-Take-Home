@@ -179,6 +179,22 @@ export default function PlayGame() {
       // Mock user_id (in a real app this would come from auth)
       const user_id = "user-123";
 
+      // 更新选定的角色为玩家角色（isplayer = true）
+      try {
+        await fetch(`/api/createStory/character/${character.character_id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isplayer: true,
+          }),
+        });
+      } catch (updateError) {
+        console.error("Error updating character isplayer flag:", updateError);
+        // 继续处理，即使更新失败
+      }
+
       const response = await fetch("/api/playGame/select-character", {
         method: "POST",
         headers: {
@@ -250,6 +266,9 @@ export default function PlayGame() {
         body: JSON.stringify({
           game_session_id: gameSessionId || "test-session-id", // Use test session if no real session
           message: newMessage,
+          // 传递故事和角色信息给API
+          story_id: selectedStory?.story_id,
+          player_character_id: selectedCharacter?.character_id,
           // 传递角色信息给API，这样即使在测试模式也能使用正确的角色名
           character_info:
             npcCharacters.length > 0
@@ -304,6 +323,37 @@ export default function PlayGame() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 在游戏结束函数中重置角色状态
+  const endGame = async () => {
+    // 重置游戏状态
+    setGamePhase("storySelection");
+    setMessages([]);
+
+    // 如果有选定的角色，将其isplayer标志重置为false
+    if (selectedCharacter) {
+      try {
+        await fetch(
+          `/api/createStory/character/${selectedCharacter.character_id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              isplayer: false,
+            }),
+          }
+        );
+      } catch (resetError) {
+        console.error("Error resetting character isplayer flag:", resetError);
+      }
+    }
+
+    setSelectedStory(null);
+    setSelectedCharacter(null);
+    setGameSessionId(null);
   };
 
   // UI for story selection phase
@@ -444,13 +494,7 @@ export default function PlayGame() {
         </div>
         <button
           className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-md transition-colors"
-          onClick={() => {
-            setGamePhase("storySelection");
-            setMessages([]);
-            setSelectedStory(null);
-            setSelectedCharacter(null);
-            setGameSessionId(null);
-          }}
+          onClick={endGame}
         >
           End Game
         </button>

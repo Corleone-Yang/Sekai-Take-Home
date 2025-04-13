@@ -318,6 +318,7 @@ export class PlayGameService {
             background: char.background,
             created_at: new Date(char.created_at),
             updated_at: new Date(char.updated_at),
+            isplayer: char.isplayer || false,
           }));
         }
       } catch (dbError) {
@@ -382,7 +383,10 @@ export class PlayGameService {
       const characterStates: Record<UUID, CharacterAgentState> = {};
       for (const character of characters) {
         // Skip the player character - we don't need an agent for them
-        if (character.character_id === session.player_character_id) {
+        if (
+          character.character_id === session.player_character_id ||
+          character.isplayer === true
+        ) {
           continue;
         }
 
