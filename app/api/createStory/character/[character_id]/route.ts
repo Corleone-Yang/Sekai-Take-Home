@@ -15,7 +15,7 @@ export async function PATCH(
   { params }: { params: { character_id: string } }
 ) {
   try {
-    const characterId = params.character_id;
+    const { character_id: characterId } = params;
     const updateData = await request.json();
 
     // Only allow updating isplayer property to prevent malicious modifications
