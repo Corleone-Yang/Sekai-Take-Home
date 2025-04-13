@@ -21,6 +21,33 @@ export default function PlayGame() {
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
 
+  // 添加CSS样式注入以解决侧边栏交互问题
+  useEffect(() => {
+    // Create style element
+    const style = document.createElement("style");
+    style.textContent = `
+      /* Preserve responsive behavior */
+      .main-content {
+        margin-left: 280px;
+        transition: margin-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        width: calc(100% - 280px);
+      }
+      
+      body.sidebar-collapsed .main-content {
+        margin-left: 90px;
+        width: calc(100% - 90px);
+      }
+    `;
+
+    // Add to document head
+    document.head.appendChild(style);
+
+    // Remove when component unmounts
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
   // Fetch available stories on component mount
   useEffect(() => {
     async function fetchStories() {

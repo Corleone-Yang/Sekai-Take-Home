@@ -53,12 +53,14 @@ export default function CreateStory() {
     style.textContent = `
       /* Preserve responsive behavior */
       .main-content {
-        padding-left: 280px;
-        transition: padding-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-left: 280px;
+        transition: margin-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        width: calc(100% - 280px);
       }
       
       body.sidebar-collapsed .main-content {
-        padding-left: 90px;
+        margin-left: 90px;
+        width: calc(100% - 90px);
       }
     `;
 
@@ -168,10 +170,10 @@ export default function CreateStory() {
   };
 
   return (
-    <div className="flex min-h-screen fantasy-page">
+    <div className="fantasy-page">
       <Sidebar />
       <main className="flex-1 main-content fantasy-content">
-        <div className="p-8">
+        <div className="p-8 pl-12">
           <h1 className="text-3xl font-bold mb-6 heading-style">
             Create Story
           </h1>
@@ -193,7 +195,9 @@ export default function CreateStory() {
               </div>
               <div
                 className={
-                  step === 1 ? "text-[#8b6a43] font-bold" : "text-[#917140]"
+                  step === 1
+                    ? "text-[#8b6a43] font-bold text-lg"
+                    : "text-[#917140] text-lg"
                 }
               >
                 Story Details
@@ -204,7 +208,9 @@ export default function CreateStory() {
               </div>
               <div
                 className={
-                  step === 2 ? "text-[#8b6a43] font-bold" : "text-[#917140]"
+                  step === 2
+                    ? "text-[#8b6a43] font-bold text-lg"
+                    : "text-[#917140] text-lg"
                 }
               >
                 Character Details
@@ -212,7 +218,7 @@ export default function CreateStory() {
             </div>
           </div>
 
-          <div className="form-container p-6">
+          <div className="form-container p-6 shadow-md">
             {step === 1 ? (
               <form onSubmit={handleStorySubmit}>
                 <table className="w-full border-collapse mb-6">

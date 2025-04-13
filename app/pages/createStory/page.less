@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Marcellus&display=swap');
+
 .fantasy-page {
   /* Use plain parchment background without gift boxes */
   background-color: #f5e9d0;
@@ -7,15 +9,19 @@
   background-size: 20px 20px;
   font-family: 'Bookman Old Style', Georgia, serif;
   min-height: 100vh;
+  width: 100%;
+  position: relative;
 }
 
 .fantasy-content {
   background-color: rgba(255, 252, 240, 0.85);
-  border-radius: 12px;
+  border-radius: 0;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(128, 99, 57, 0.2);
-  margin: 20px;
   position: relative;
   overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+  padding-left: 1.5rem; /* Add some padding on the left side */
 }
 
 .heading-style {
@@ -25,6 +31,10 @@
   border-bottom: 2px solid #d4b98c;
   padding-bottom: 12px;
   letter-spacing: 1px;
+  padding-left: 0.5rem;
+  margin-left: 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
 .form-container {
@@ -33,6 +43,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(139, 106, 67, 0.1);
   transition: all 0.3s ease;
+  margin-top: 1.5rem;
 }
 
 .active-step {
@@ -84,6 +95,13 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   padding: 8px 16px;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: linear-gradient(to bottom, #9d7a4e, #735c3d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .secondary-button {
@@ -97,6 +115,13 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   padding: 8px 16px;
+  cursor: pointer;
+}
+
+.secondary-button:hover {
+  background: linear-gradient(to bottom, #f5eee0, #e0d1b5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(139, 106, 67, 0.15);
 }
 
 .character-card {
@@ -108,6 +133,17 @@
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 3px 10px rgba(139, 106, 67, 0.1);
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, #d4b98c, transparent);
+  }
 }
 
 .fantasy-input {
@@ -117,6 +153,13 @@
   padding: 12px;
   width: 100%;
   color: #3a2921;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: #8b6a43;
+    box-shadow: 0 0 0 2px rgba(139, 106, 67, 0.2);
+    outline: none;
+  }
 }
 
 /* Style for placeholder text to make it look like virtual/phantom text */
@@ -136,6 +179,13 @@
   width: 100%;
   color: #3a2921;
   min-height: 100px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    border-color: #8b6a43;
+    box-shadow: 0 0 0 2px rgba(139, 106, 67, 0.2);
+    outline: none;
+  }
 }
 
 /* Style for textarea placeholder as well */
@@ -149,6 +199,11 @@
 
 .fantasy-table-row {
   border-bottom: 1px solid #e6d6b8;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: rgba(255, 252, 245, 0.6);
+  }
 }
 
 .form-label {
@@ -185,4 +240,15 @@
   background-color: rgba(127, 166, 80, 0.2);
   border-left: 4px solid #7fa650;
   color: #4a652c;
+}
+
+/* Fix the main content positioning */
+.main-content {
+  padding-left: 0 !important;
+  margin-left: 0;
+  transition: margin-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+body.sidebar-collapsed .main-content {
+  padding-left: 0 !important;
 } 
