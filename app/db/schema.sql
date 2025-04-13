@@ -82,3 +82,55 @@ CREATE TRIGGER set_timestamp_characters
 BEFORE UPDATE ON characters
 FOR EACH ROW
 EXECUTE PROCEDURE trigger_set_timestamp();
+
+-- Function to create characters for a story based on character_num
+CREATE OR REPLACE FUNCTION create_characters_for_story(
+    story_id_param UUID,
+    character_count INTEGER
+)
+RETURNS VOID AS $$
+DECLARE
+    i INTEGER;
+BEGIN
+    FOR i IN 1..character_count LOOP
+        INSERT INTO characters (
+            story_id,
+            name
+        ) VALUES (
+            story_id_param,
+            'Character ' || i
+        );
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to handle story creation with characters
+CREATE OR REPLACE FUNCTION create_story_with_characters(
+    title_param TEXT,
+    background_param TEXT,
+    character_num_param INTEGER,
+    user_id_param UUID
+)
+RETURNS UUID AS $$
+DECLARE
+    new_story_id UUID;
+BEGIN
+    -- Insert the story
+    INSERT INTO stories (
+        title,
+        background,
+        character_num,
+        user_id
+    ) VALUES (
+        title_param,
+        background_param,
+        character_num_param,
+        user_id_param
+    ) RETURNING story_id INTO new_story_id;
+    
+    -- Create the specified number of characters
+    PERFORM create_characters_for_story(new_story_id, character_num_param);
+    
+    RETURN new_story_id;
+END;
+$$ LANGUAGE plpgsql;
