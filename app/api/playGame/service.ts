@@ -199,10 +199,39 @@ export class PlayGameService {
     storyId: UUID,
     sessionId: UUID
   ): Promise<void> {
-    // Get all characters for the story
-    const characters = Array.from(mockDB.characters.values()).filter(
-      (char) => char.story_id === storyId
-    );
+    // Try to get characters from Supabase database first
+    let characters: Character[] = [];
+    try {
+      // Get characters from database
+      const { data: dbCharacters, error } = await supabaseAdmin
+        .from("characters")
+        .select("*")
+        .eq("story_id", storyId);
+
+      if (error) throw error;
+
+      if (dbCharacters && dbCharacters.length > 0) {
+        // Transform to Character type
+        characters = dbCharacters.map((char) => ({
+          character_id: char.character_id as UUID,
+          story_id: char.story_id as UUID,
+          name: char.name,
+          character: char.character,
+          background: char.background,
+          created_at: new Date(char.created_at),
+          updated_at: new Date(char.updated_at),
+        }));
+      }
+    } catch (dbError) {
+      console.error(
+        "Error fetching characters from DB for memory initialization:",
+        dbError
+      );
+      // Fallback to mock data if database access fails
+      characters = Array.from(mockDB.characters.values()).filter(
+        (char) => char.story_id === storyId
+      );
+    }
 
     // For each character, initialize long-term memories
     for (const character of characters) {
@@ -231,6 +260,25 @@ export class PlayGameService {
         },
       ];
 
+      // Try to add relationship memories between characters
+      const otherCharacters = characters.filter(
+        (c) => c.character_id !== character.character_id
+      );
+
+      for (const otherChar of otherCharacters) {
+        // Create a simple relationship memory
+        longTermMemories.push({
+          memory_id: randomUUID(),
+          session_id: sessionId,
+          character_id: character.character_id,
+          type: MemoryType.LONG_TERM,
+          content: `${otherChar.name} is another character in this story.`,
+          category: "relationship",
+          created_at: new Date(),
+          importance: 8,
+        });
+      }
+
       // Store the memories
       mockDB.longTermMemories.set(character.character_id, longTermMemories);
       mockDB.shortTermMemories.set(character.character_id, []);
@@ -250,10 +298,35 @@ export class PlayGameService {
         throw new Error("Game session not found or inactive");
       }
 
-      // Get all characters for the story
-      const storyCharacters = Array.from(mockDB.characters.values()).filter(
-        (char) => char.story_id === session.story_id
-      );
+      // First try to get characters from database
+      let storyCharacters: Character[] = [];
+      try {
+        // Get characters from Supabase database
+        const { data: characters, error } = await supabaseAdmin
+          .from("characters")
+          .select("*")
+          .eq("story_id", session.story_id);
+
+        if (error) throw error;
+        if (characters && characters.length > 0) {
+          // Transform to Character type
+          storyCharacters = characters.map((char) => ({
+            character_id: char.character_id as UUID,
+            story_id: char.story_id as UUID,
+            name: char.name,
+            character: char.character,
+            background: char.background,
+            created_at: new Date(char.created_at),
+            updated_at: new Date(char.updated_at),
+          }));
+        }
+      } catch (dbError) {
+        console.error("Error fetching characters from DB:", dbError);
+        // Fallback to mock data
+        storyCharacters = Array.from(mockDB.characters.values()).filter(
+          (char) => char.story_id === session.story_id
+        );
+      }
 
       // Get the player character
       const playerCharacter = storyCharacters.find(
@@ -658,27 +731,75 @@ Provide a single paragraph summary (2-3 sentences) that captures the most import
       const playerMessage =
         state.current_context[state.current_context.length - 1];
 
-      // Create a prompt for Gemini
+      // Try to get the most up-to-date character information from Supabase
+      let characterName = state.character_name;
+      let characterPersonality = state.personality;
+      let characterBackground = state.background;
+
+      try {
+        const { data: characterData, error } = await supabaseAdmin
+          .from("characters")
+          .select("*")
+          .eq("character_id", state.character_id)
+          .single();
+
+        if (!error && characterData) {
+          characterName = characterData.name;
+          characterPersonality = characterData.character || state.personality;
+          characterBackground = characterData.background || state.background;
+        }
+      } catch (dbError) {
+        console.error("Error fetching updated character data:", dbError);
+        // Continue with existing state data if DB fetch fails
+      }
+
+      // Extract relevant long-term memories (personality, background, relationships)
+      const longTermPersonality = state.long_term_memories
+        .filter((mem) => mem.category === "personality")
+        .map((mem) => mem.content)
+        .join("\n");
+
+      const longTermBackground = state.long_term_memories
+        .filter((mem) => mem.category === "background")
+        .map((mem) => mem.content)
+        .join("\n");
+
+      const relationshipMemories = state.long_term_memories
+        .filter((mem) => mem.category === "relationship")
+        .map((mem) => `- ${mem.content}`)
+        .join("\n");
+
+      // Get recent short-term memories (most recent conversations)
+      // Sort by importance and recency
+      const recentShortTermMemories = state.short_term_memories
+        .sort(
+          (a, b) => b.importance - a.importance || b.turn_number - a.turn_number
+        )
+        .slice(0, 5)
+        .map((mem) => `- ${mem.content}`)
+        .join("\n");
+
+      // Create a comprehensive prompt for Gemini that follows the memory architecture
       const prompt = `
-You are roleplaying as a character named "${
-        state.character_name
-      }" in an interactive story.
+You are roleplaying as a character named "${characterName}" in an interactive story.
 
-Character Information:
-- Personality: ${state.personality}
-- Background: ${state.background}
+LONG-TERM MEMORY (permanent character information):
+- Personality: ${longTermPersonality || characterPersonality}
+- Background: ${longTermBackground || characterBackground}
+${relationshipMemories ? `- Relationships:\n${relationshipMemories}` : ""}
 
-Recent memories and context:
-${state.short_term_memories
-  .slice(-5)
-  .map((memory) => `- ${memory.content}`)
-  .join("\n")}
+SHORT-TERM MEMORY (recent events and conversations):
+${recentShortTermMemories || "No recent memories yet."}
 
+CURRENT DIALOG CONTEXT:
 The player just said: "${playerMessage.content}"
 
-Respond in first person as ${
-        state.character_name
-      }, staying true to the character's personality and background. 
+Respond in first person as ${characterName}, incorporating:
+1. Your personality traits from long-term memory
+2. Relevant background knowledge
+3. Any pertinent short-term memories of recent interactions
+4. Natural reaction to the current dialog
+
 Keep your response concise (1-3 sentences) and conversational.
 Do not use quotation marks or labels for who is speaking.
 `;
@@ -688,7 +809,7 @@ Do not use quotation marks or labels for who is speaking.
 
       return {
         character_id: state.character_id,
-        character_name: state.character_name,
+        character_name: characterName,
         content: response,
         timestamp: new Date(),
       };

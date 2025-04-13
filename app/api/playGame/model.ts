@@ -80,10 +80,19 @@ export interface SelectPlayerCharacterResponse {
   message: string;
 }
 
+// Character info for test sessions
+export interface CharacterInfo {
+  npc_characters: {
+    id: UUID;
+    name: string;
+  }[];
+}
+
 // Send message request/response
 export interface SendMessageRequest {
   game_session_id: UUID;
   message: string;
+  character_info?: CharacterInfo; // Optional character info for test sessions
 }
 
 export interface SendMessageResponse {

@@ -4,6 +4,41 @@ import { useEffect, useRef, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./page.less";
 
+// Text typewriter effect component
+function TypewriterText({ text, speed = 30 }) {
+  const [displayedText, setDisplayedText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
+      }, speed);
+
+      return () => clearTimeout(timeout);
+    } else {
+      setIsComplete(true);
+    }
+  }, [currentIndex, text, speed]);
+
+  // Reset when text changes
+  useEffect(() => {
+    setDisplayedText("");
+    setCurrentIndex(0);
+    setIsComplete(false);
+  }, [text]);
+
+  // Add a blinking cursor at the end if still typing
+  return (
+    <div className="whitespace-pre-wrap">
+      {displayedText}
+      {!isComplete && <span className="typing-cursor">|</span>}
+    </div>
+  );
+}
+
 // Add inline styles for critical UI elements
 const styles = {
   chatContainer: {
@@ -190,7 +225,12 @@ export default function PlayGame() {
       setIsLoading(true);
       setIsPlayerTurn(false);
 
-      // Add player message to the chat
+      // 计算哪些NPC角色会响应
+      const npcCharacters = characters.filter(
+        (char) => char.character_id !== selectedCharacter?.character_id
+      );
+
+      // 添加玩家消息到聊天
       const playerMessage = {
         type: "player",
         character_name: selectedCharacter?.name || "You",
@@ -210,6 +250,16 @@ export default function PlayGame() {
         body: JSON.stringify({
           game_session_id: gameSessionId || "test-session-id", // Use test session if no real session
           message: newMessage,
+          // 传递角色信息给API，这样即使在测试模式也能使用正确的角色名
+          character_info:
+            npcCharacters.length > 0
+              ? {
+                  npc_characters: npcCharacters.map((char) => ({
+                    id: char.character_id,
+                    name: char.name,
+                  })),
+                }
+              : undefined,
         }),
       });
 
@@ -232,7 +282,7 @@ export default function PlayGame() {
             {
               type: "npc",
               character_id: npcResponse.character_id,
-              character_name: npcResponse.character_name || "Game Assistant",
+              character_name: npcResponse.character_name || "NPC Character",
               content: npcResponse.content,
               timestamp: new Date(npcResponse.timestamp || Date.now()),
             },
@@ -429,7 +479,7 @@ export default function PlayGame() {
               return (
                 <div key={index} className="flex mb-6">
                   <div className="flex flex-col items-start max-w-[80%]">
-                    <div className="text-xs text-gray-500 ml-2 mb-1">
+                    <div className="text-xs text-gray-500 ml-2 mb-1 font-semibold">
                       {msg.character_name}
                     </div>
                     <div className="bg-white text-gray-800 px-4 py-3 rounded-lg shadow-sm border border-gray-200">
@@ -445,7 +495,7 @@ export default function PlayGame() {
               return (
                 <div key={index} className="flex justify-end mb-6">
                   <div className="flex flex-col items-end max-w-[80%]">
-                    <div className="text-xs text-gray-500 mr-2 mb-1">
+                    <div className="text-xs text-gray-500 mr-2 mb-1 font-semibold">
                       {msg.character_name}
                     </div>
                     <div className="bg-indigo-600 text-white px-4 py-3 rounded-lg shadow-sm">
@@ -461,11 +511,27 @@ export default function PlayGame() {
           {isLoading && (
             <div className="flex justify-end mb-6">
               <div className="flex flex-col items-end">
-                <div className="text-xs text-gray-500 mr-2 mb-1">
+                <div className="text-xs text-gray-500 mr-2 mb-1 font-semibold">
                   {messages.length > 0 &&
-                  messages[messages.length - 1].type !== "player"
-                    ? selectedCharacter?.name
-                    : "Game Assistant"}
+                  messages[messages.length - 1].type === "player"
+                    ? characters.length > 1
+                      ? characters.filter(
+                          (char) =>
+                            char.character_id !==
+                            selectedCharacter?.character_id
+                        )[0]?.name || "Responding..."
+                      : selectedCharacter
+                      ? `${selectedCharacter.name}'s Friend`
+                      : "Character"
+                    : messages.length > 0 &&
+                      messages[messages.length - 1].type === "npc"
+                    ? messages[messages.length - 1].character_name
+                    : characters.length > 1
+                    ? characters.filter(
+                        (char) =>
+                          char.character_id !== selectedCharacter?.character_id
+                      )[0]?.name || "Character"
+                    : "Character"}
                 </div>
                 <div className="bg-indigo-600 text-white px-6 py-4 rounded-lg shadow-sm">
                   <div className="typing-indicator">
@@ -595,41 +661,6 @@ export default function PlayGame() {
           {renderGamePhase()}
         </div>
       </main>
-    </div>
-  );
-}
-
-// Text typewriter effect component
-function TypewriterText({ text, speed = 30 }) {
-  const [displayedText, setDisplayedText] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isComplete, setIsComplete] = useState(false);
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText((prev) => prev + text[currentIndex]);
-        setCurrentIndex((prev) => prev + 1);
-      }, speed);
-
-      return () => clearTimeout(timeout);
-    } else {
-      setIsComplete(true);
-    }
-  }, [currentIndex, text, speed]);
-
-  // Reset when text changes
-  useEffect(() => {
-    setDisplayedText("");
-    setCurrentIndex(0);
-    setIsComplete(false);
-  }, [text]);
-
-  // Add a blinking cursor at the end if still typing
-  return (
-    <div className="whitespace-pre-wrap">
-      {displayedText}
-      {!isComplete && <span className="typing-cursor">|</span>}
     </div>
   );
 }
