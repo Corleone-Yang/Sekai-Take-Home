@@ -1,1 +1,301 @@
+// Fantasy Adventure Style for Story Dashboard - Integrated with Sidebar
 
+// Import the same fonts as sidebar
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Marcellus&display=swap');
+
+// Color palette - matched with sidebar
+@primary-dark: #16213e;
+@primary-light: #1e2c4e;
+@accent-gold: #e6b655;
+@accent-glow: #ffdf8d;
+@text-light: #eee1c5;
+@text-dark: #16213e;
+@parchment: #f5f0e5;
+@shadow-color: rgba(0, 0, 0, 0.3);
+
+// Handle sidebar collapsed state (matches sidebar component)
+body.sidebar-collapsed {
+  .main-content {
+    margin-left: 90px; // Width of collapsed sidebar
+  }
+}
+
+// Mixins
+.fantasy-shadow() {
+  box-shadow: 0 10px 20px @shadow-color, 0 4px 8px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.fantasy-border() {
+  border: 2px solid @accent-gold;
+  border-radius: 8px;
+}
+
+.gold-button() {
+  background: linear-gradient(135deg, @accent-gold 0%, #f8e9c2 50%, @accent-gold 100%);
+  border: 1px solid darken(@accent-gold, 10%);
+  color: @primary-dark;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  font-family: 'Marcellus', serif;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 0 10px @accent-glow;
+    transform: translateY(-2px) scale(1.03);
+    text-shadow: 0 0 5px rgba(230, 182, 85, 0.7);
+  }
+  
+  &:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+  }
+}
+
+// Shine animation - copied from sidebar
+.shine-animation() {
+  animation: shine 3s ease-in-out infinite;
+  @keyframes shine {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+}
+
+// Main content area - positioned relative to sidebar
+.main-content {
+  margin-left: 280px; // Match expanded sidebar width
+  transition: margin-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-height: 100vh;
+  background-color: @parchment;
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(230, 182, 85, 0.05) 0%, transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 2px, transparent 2px),
+    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+  background-position: 0 0, -2px -2px, -2px -2px, -1px -1px, -1px -1px;
+  padding: 2rem;
+  
+  h1.heading-style {
+    font-family: 'Cinzel', serif;
+    color: @primary-dark;
+    text-shadow: 1px 1px 2px @shadow-color;
+    letter-spacing: 1px;
+    border-bottom: none;
+    position: relative;
+    padding-bottom: 1rem;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 120px;
+      height: 4px;
+      background: linear-gradient(to right, @accent-gold, transparent);
+      border-radius: 2px;
+    }
+  }
+}
+
+// Story Cards
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.bg-white {
+  background: linear-gradient(to bottom right, #fff, @parchment);
+  .fantasy-border();
+  .fantasy-shadow();
+  transform: perspective(1000px) rotateX(2deg);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  // Add decorative corner (similar to sidebar decorations)
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, transparent 50%, rgba(230, 182, 85, 0.1) 50%);
+    z-index: 1;
+  }
+  
+  &:hover {
+    transform: perspective(1000px) rotateX(0deg) scale(1.02);
+    border-color: @accent-gold;
+    box-shadow: 0 15px 30px @shadow-color, 0 0 10px @accent-glow;
+    
+    &::before {
+      background: linear-gradient(135deg, transparent 50%, rgba(230, 182, 85, 0.3) 50%);
+    }
+    
+    h2 {
+      color: @primary-dark;
+      text-shadow: 0 0 5px rgba(230, 182, 85, 0.5);
+    }
+  }
+  
+  h2 {
+    font-family: 'Cinzel', serif;
+    color: @primary-dark;
+    border-bottom: 1px solid fade(@accent-gold, 30%);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+  
+  p {
+    color: @text-dark;
+    line-height: 1.6;
+    font-family: 'Marcellus', serif;
+  }
+  
+  .text-gray-500, .text-gray-600, .text-sm {
+    color: fade(@text-dark, 70%);
+  }
+}
+
+// Buttons
+button {
+  .gold-button();
+  padding: 0.5rem 1rem;
+  
+  &.bg-blue-600 {
+    background: linear-gradient(to bottom, lighten(@primary-light, 20%), @primary-light);
+    border-color: @primary-dark;
+    color: @text-light;
+    
+    &:hover {
+      background: linear-gradient(to bottom, lighten(@primary-light, 25%), lighten(@primary-light, 10%));
+      box-shadow: 0 0 10px rgba(30, 44, 78, 0.5);
+    }
+  }
+  
+  &.bg-red-600 {
+    background: linear-gradient(to bottom, #C04848, #A03838);
+    border-color: #902828;
+    color: @text-light;
+    
+    &:hover {
+      background: linear-gradient(to bottom, #D05858, #C04848);
+      box-shadow: 0 0 10px rgba(160, 56, 56, 0.5);
+    }
+  }
+}
+
+// Messages
+.error-message, .success-message {
+  border-width: 2px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-family: 'Marcellus', serif;
+  .fantasy-shadow();
+  padding: 1rem 1.5rem;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+  }
+}
+
+.error-message {
+  background-color: #FFF1F0;
+  border-color: #FFB4A9;
+  color: #93261A;
+  
+  &::before {
+    background: linear-gradient(to right, #FF6B4A, #FFB4A9);
+  }
+}
+
+.success-message {
+  background-color: #F0FFF4;
+  border-color: #A3E4B7;
+  color: #276749;
+  
+  &::before {
+    background: linear-gradient(to right, #48BB78, #A3E4B7);
+  }
+}
+
+// Loading spinner
+.spinner {
+  border-width: 5px;
+  border-color: fade(@accent-gold, 20%);
+  border-top-color: @accent-gold;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  position: relative;
+  .shine-animation();
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: -15px;
+    right: -15px;
+    bottom: -15px;
+    border: 2px solid fade(@accent-gold, 10%);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+}
+
+// Responsive adjustments
+@media screen and (max-width: 1024px) {
+  .main-content {
+    margin-left: 90px; // Match collapsed sidebar on smaller screens
+  }
+  
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-content {
+    padding: 1rem;
+  }
+  
+  .bg-white {
+    transform: none;
+    
+    &:hover {
+      transform: scale(1.01);
+    }
+  }
+}
