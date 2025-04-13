@@ -119,9 +119,9 @@ export default function Edit({ storyId, onClose, onSave }) {
     try {
       setLoading(true);
 
-      // 准备只包含有效 character_id 的角色数据
+      // Prepare data only including characters with valid character_id
       const validCharacters = characters
-        .filter((char) => char.character_id) // 只包含已有ID的角色（已存在的）
+        .filter((char) => char.character_id) // Only include characters that already exist
         .map((char) => ({
           character_id: char.character_id,
           name: char.name,
@@ -129,7 +129,7 @@ export default function Edit({ storyId, onClose, onSave }) {
           background: char.background || "",
         }));
 
-      // 检查是否有新角色（没有 character_id 的角色）
+      // Check if there are new characters (without character_id)
       const newCharacters = characters.filter((char) => !char.character_id);
 
       // Prepare the update request
@@ -140,8 +140,6 @@ export default function Edit({ storyId, onClose, onSave }) {
         characters: validCharacters,
         deleted_character_ids: deletedCharacters,
       };
-
-      console.log("Sending update data:", updateData);
 
       // Update the story using the API
       const response = await fetch(`/api/createStory/${storyId}`, {
@@ -161,7 +159,7 @@ export default function Edit({ storyId, onClose, onSave }) {
 
       const result = await response.json();
 
-      // 如果有新角色，逐个创建
+      // If there are new characters, create them one by one
       if (newCharacters.length > 0) {
         for (const newChar of newCharacters) {
           try {

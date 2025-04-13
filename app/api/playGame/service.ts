@@ -841,7 +841,7 @@ const initMockData = async () => {
     const { stories } = await playGameService.getStories();
 
     if (stories.length === 0) {
-      console.log("No stories found in database, initializing mock data");
+      // Initialize mock data with sample stories
 
       // Sample story 1
       const story1Id = randomUUID();
@@ -954,7 +954,7 @@ const initMockData = async () => {
       });
     }
   } catch (error) {
-    console.error("Error initializing mock data:", error);
+    // Error handling for mock data initialization
   }
 };
 

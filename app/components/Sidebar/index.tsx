@@ -13,9 +13,9 @@ import { supabase } from "../../config/supabase";
 import "./index.less";
 
 const Sidebar = () => {
-  // 从localStorage初始化collapsed状态，如果不存在则默认为false（展开状态）
+  // Initialize collapsed state from localStorage, default to false (expanded state) if it doesn't exist
   const [collapsed, setCollapsed] = useState(() => {
-    // 在服务端渲染时不执行localStorage操作
+    // Don't execute localStorage operations during server-side rendering
     if (typeof window !== "undefined") {
       const savedState = localStorage.getItem("sidebar-collapsed");
       return savedState ? JSON.parse(savedState) : false;
@@ -26,7 +26,7 @@ const Sidebar = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // 将collapsed状态保存到localStorage
+    // Save collapsed state to localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
     }

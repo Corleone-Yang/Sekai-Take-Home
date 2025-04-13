@@ -75,7 +75,7 @@ export default function PlayGame() {
   const messagesEndRef = useRef(null);
   const messageInputRef = useRef(null);
 
-  // 添加CSS样式注入以解决侧边栏交互问题
+  // Add CSS style injection to fix sidebar interaction issues
   useEffect(() => {
     // Create style element
     const style = document.createElement("style");
@@ -179,7 +179,7 @@ export default function PlayGame() {
       // Mock user_id (in a real app this would come from auth)
       const user_id = "user-123";
 
-      // 更新选定的角色为玩家角色（isplayer = true）
+      // Update selected character as player character (isplayer = true)
       try {
         await fetch(`/api/createStory/character/${character.character_id}`, {
           method: "PATCH",
@@ -192,7 +192,7 @@ export default function PlayGame() {
         });
       } catch (updateError) {
         console.error("Error updating character isplayer flag:", updateError);
-        // 继续处理，即使更新失败
+        // Continue processing, even if update fails
       }
 
       const response = await fetch("/api/playGame/select-character", {
@@ -241,12 +241,12 @@ export default function PlayGame() {
       setIsLoading(true);
       setIsPlayerTurn(false);
 
-      // 计算哪些NPC角色会响应
+      // Calculate which NPC characters will respond
       const npcCharacters = characters.filter(
         (char) => char.character_id !== selectedCharacter?.character_id
       );
 
-      // 添加玩家消息到聊天
+      // Add player message to chat
       const playerMessage = {
         type: "player",
         character_name: selectedCharacter?.name || "You",
@@ -266,10 +266,10 @@ export default function PlayGame() {
         body: JSON.stringify({
           game_session_id: gameSessionId || "test-session-id", // Use test session if no real session
           message: newMessage,
-          // 传递故事和角色信息给API
+          // Pass story and character information to API
           story_id: selectedStory?.story_id,
           player_character_id: selectedCharacter?.character_id,
-          // 传递角色信息给API，这样即使在测试模式也能使用正确的角色名
+          // Pass character information to API, so correct character names can be used even in test mode
           character_info:
             npcCharacters.length > 0
               ? {
@@ -325,13 +325,13 @@ export default function PlayGame() {
     }
   };
 
-  // 在游戏结束函数中重置角色状态
+  // Reset character state when ending the game
   const endGame = async () => {
-    // 重置游戏状态
+    // Reset game state
     setGamePhase("storySelection");
     setMessages([]);
 
-    // 如果有选定的角色，将其isplayer标志重置为false
+    // If a character is selected, reset its isplayer flag to false
     if (selectedCharacter) {
       try {
         await fetch(

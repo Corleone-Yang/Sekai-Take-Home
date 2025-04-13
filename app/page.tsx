@@ -15,7 +15,7 @@ export default function Home() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [editingStoryId, setEditingStoryId] = useState(null);
 
-  // 添加CSS样式注入以解决侧边栏交互问题
+  // Add CSS style injection to fix sidebar interaction issues
   useEffect(() => {
     // Create style element
     const style = document.createElement("style");

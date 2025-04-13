@@ -4,7 +4,7 @@ import { generateGeminiResponse } from "../../../config/gemini";
 import { SendMessageRequest } from "../model";
 import { playGameService } from "../service";
 
-// 初始化supabaseAdmin
+// Initialize supabaseAdmin
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseAdmin = createClient(
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
                     (char) => char.character_id !== playerCharacterId
                   );
                 } else {
-                  // 如果没有指定玩家角色ID，则检查isplayer标志
+                  // If no player character ID is specified, check the isplayer flag
                   npcCharacters = characters.filter(
                     (char) => char.isplayer !== true
                   );
@@ -130,13 +130,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // Add some console logging for debugging
-        console.log("Player character ID:", playerCharacterId);
-        console.log(
-          "NPC characters:",
-          npcCharacters.map((c) => `${c.name} (${c.character_id})`).join(", ")
-        );
-
         // Determine how many NPCs should respond (all available NPCs)
         const responseCount = npcCharacters.length;
 
@@ -190,7 +183,6 @@ IMPORTANT:
           responses: characterResponses,
         });
       } catch (geminiError) {
-        console.error("Error using Gemini for test message:", geminiError);
         return NextResponse.json(
           {
             error: "Failed to generate test response",
@@ -210,7 +202,6 @@ IMPORTANT:
       const response = await playGameService.processMessage(messageRequest);
       return NextResponse.json(response);
     } catch (error) {
-      console.error("Error processing message:", error);
       return NextResponse.json(
         {
           error: "Failed to process message",
@@ -221,7 +212,6 @@ IMPORTANT:
       );
     }
   } catch (parseError) {
-    console.error("Error parsing request:", parseError);
     return NextResponse.json(
       {
         error: "Invalid request",
