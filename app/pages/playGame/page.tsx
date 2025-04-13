@@ -4,6 +4,25 @@ import { useEffect, useRef, useState } from "react";
 import Sidebar from "../../components/Sidebar";
 import "./page.less";
 
+// Add inline styles for critical UI elements
+const styles = {
+  chatContainer: {
+    backgroundColor: 'rgba(254, 243, 199, 0.3)',
+    backgroundImage: 'linear-gradient(rgba(254, 243, 199, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(254, 243, 199, 0.3) 1px, transparent 1px)',
+    backgroundSize: '20px 20px',
+  },
+  playerMessage: {
+    background: 'linear-gradient(to right bottom, #f59e0b, #d97706)',
+    borderRadius: '1rem',
+    borderTopRightRadius: '0.25rem',
+  },
+  npcMessage: {
+    background: 'white',
+    borderRadius: '1rem',
+    borderTopLeftRadius: '0.25rem',
+  }
+};
+
 export default function PlayGame() {
   // State for different game phases
   const [gamePhase, setGamePhase] = useState("storySelection"); // storySelection, characterSelection, playing
@@ -206,33 +225,30 @@ export default function PlayGame() {
           const npcResponse = data.responses[i];
 
           // Wait a bit between messages to simulate typing
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 800));
 
           setMessages((prev) => [
             ...prev,
             {
               type: "npc",
               character_id: npcResponse.character_id,
-              character_name: npcResponse.character_name,
+              character_name: npcResponse.character_name || "Game Assistant",
               content: npcResponse.content,
               timestamp: new Date(npcResponse.timestamp || Date.now()),
             },
           ]);
+
+          // Add a small delay between multiple NPC responses
+          if (i < data.responses.length - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
         }
       }
 
-      // Check if the last message suggests it's the player's turn
-      const lastResponse =
-        data.responses[data.responses.length - 1]?.content || "";
-      const isPlayerTurnNow =
-        lastResponse.includes("?") ||
-        lastResponse.includes("What do you do?") ||
-        lastResponse.includes("Your turn") ||
-        data.responses.length > 0; // Always player's turn after a response
-
-      setIsPlayerTurn(isPlayerTurnNow);
+      // Always set player's turn after all responses are added
+      setIsPlayerTurn(true);
     } catch (error) {
-      setError(error.message);
+      setError(error.message || "Error sending message");
       console.error("Error sending message:", error);
       setIsPlayerTurn(true); // Let the player try again
     } finally {
@@ -365,16 +381,19 @@ export default function PlayGame() {
 
   // UI for the gameplay phase
   const renderGameplay = () => (
-    <div className="game-container h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+    <div className="game-container h-screen flex flex-col">
+      {/* Header with story title and end game button */}
+      <div className="sticky top-0 z-20 bg-white flex items-center justify-between py-3 px-4 border-b border-gray-200">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-xl font-bold text-gray-800">
             {selectedStory?.title}
           </h2>
-          <p className="text-gray-600">Playing as {selectedCharacter?.name}</p>
+          <p className="text-sm text-gray-600">
+            Playing as {selectedCharacter?.name}
+          </p>
         </div>
         <button
-          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition"
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-md transition-colors"
           onClick={() => {
             setGamePhase("storySelection");
             setMessages([]);
@@ -387,125 +406,151 @@ export default function PlayGame() {
         </button>
       </div>
 
-      <div className="chat-container flex-1 overflow-y-auto mb-4 px-4 py-2 bg-gray-100 rounded-lg">
-        {messages.map((msg, index) => {
-          if (msg.type === "system") {
-            return (
-              <div key={index} className="my-4 text-center">
-                <div className="inline-block px-4 py-2 bg-gray-200 rounded-lg text-gray-700">
-                  {msg.content}
-                </div>
-              </div>
-            );
-          } else if (msg.type === "player") {
-            return (
-              <div key={index} className="flex justify-end my-2">
-                <div className="message-bubble player-message max-w-xl px-4 py-2 text-white rounded-lg shadow">
-                  <div className="font-semibold mb-1">{msg.character_name}</div>
-                  <div className="message-content">
-                    <TypewriterText text={msg.content} speed={10} />
+      {/* Chat messages area - takes all available space between header and input */}
+      <div
+        className="chat-container flex-1 overflow-y-auto py-4 px-4"
+        style={{
+          backgroundColor: "#f9fafb",
+          backgroundImage: "none",
+        }}
+      >
+        <div className="max-w-3xl mx-auto">
+          {messages.map((msg, index) => {
+            if (msg.type === "system") {
+              return (
+                <div key={index} className="flex justify-center my-6">
+                  <div className="bg-blue-50 text-blue-800 px-4 py-2 rounded-lg text-sm max-w-[80%]">
+                    {msg.content}
                   </div>
                 </div>
-              </div>
-            );
-          } else {
-            return (
-              <div key={index} className="flex justify-start my-2">
-                <div className="message-bubble npc-message max-w-xl px-4 py-2 bg-white text-gray-800 rounded-lg shadow">
-                  <div className="font-semibold mb-1 text-amber-700">
-                    {msg.character_name}
-                  </div>
-                  <div className="message-content">
-                    <TypewriterText text={msg.content} speed={30} />
+              );
+            } else if (msg.type === "player") {
+              // Player messages on the left side
+              return (
+                <div key={index} className="flex mb-6">
+                  <div className="flex flex-col items-start max-w-[80%]">
+                    <div className="text-xs text-gray-500 ml-2 mb-1">
+                      {msg.character_name}
+                    </div>
+                    <div className="bg-white text-gray-800 px-4 py-3 rounded-lg shadow-sm border border-gray-200">
+                      <div className="message-content">
+                        <TypewriterText text={msg.content} speed={10} />
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          }
-        })}
-        {isLoading && (
-          <div className="flex justify-start my-2">
-            <div className="message-bubble npc-message px-4 py-3 bg-white text-gray-800 rounded-lg shadow">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
+              );
+            } else {
+              // NPC/Agent messages on the right side
+              return (
+                <div key={index} className="flex justify-end mb-6">
+                  <div className="flex flex-col items-end max-w-[80%]">
+                    <div className="text-xs text-gray-500 mr-2 mb-1">
+                      {msg.character_name}
+                    </div>
+                    <div className="bg-indigo-600 text-white px-4 py-3 rounded-lg shadow-sm">
+                      <div className="message-content">
+                        <TypewriterText text={msg.content} speed={30} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+          })}
+          {isLoading && (
+            <div className="flex justify-end mb-6">
+              <div className="flex flex-col items-end">
+                <div className="text-xs text-gray-500 mr-2 mb-1">
+                  {messages.length > 0 &&
+                  messages[messages.length - 1].type !== "player"
+                    ? selectedCharacter?.name
+                    : "Game Assistant"}
+                </div>
+                <div className="bg-indigo-600 text-white px-6 py-4 rounded-lg shadow-sm">
+                  <div className="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          )}
+          <div ref={messagesEndRef} className="h-4" />
+        </div>
       </div>
 
-      <div className="relative">
-        <input
-          ref={messageInputRef}
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          disabled={!isPlayerTurn || isLoading}
-          placeholder={
-            isPlayerTurn
-              ? "Type your message..."
-              : "Waiting for other characters..."
-          }
-          className={`message-input w-full px-4 py-3 pr-12 rounded-lg border ${
-            isPlayerTurn
-              ? "border-amber-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-              : "bg-gray-100 border-gray-300 text-gray-500"
-          } focus:outline-none`}
-          onKeyPress={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSendMessage();
-            }
-          }}
-        />
-        <button
-          disabled={!isPlayerTurn || isLoading}
-          onClick={handleSendMessage}
-          className={`send-button absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full ${
-            isPlayerTurn && !isLoading
-              ? "bg-amber-600 hover:bg-amber-700 text-white"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
-          {isLoading ? (
-            <svg
-              className="animate-spin h-5 w-5"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
+      {/* Input area - fixed at the bottom of the screen */}
+      <div className="sticky bottom-0 z-20 bg-white border-t border-gray-200 p-4 w-full">
+        <div className="max-w-3xl mx-auto">
+          <div className="relative">
+            <input
+              ref={messageInputRef}
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              disabled={!isPlayerTurn || isLoading}
+              placeholder={
+                isPlayerTurn
+                  ? "Type your message..."
+                  : "Waiting for other characters..."
+              }
+              className={`w-full px-4 py-3 pr-12 rounded-lg border ${
+                isPlayerTurn
+                  ? "border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                  : "bg-gray-100 border-gray-300 text-gray-500"
+              } focus:outline-none`}
+              onKeyPress={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <button
+              disabled={!isPlayerTurn || isLoading}
+              onClick={handleSendMessage}
+              className={`absolute right-2 top-1/2 transform -translate-y-1/2 p-2 rounded-full ${
+                isPlayerTurn && !isLoading
+                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
             >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              ></path>
-            </svg>
-          ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
+              {isLoading ? (
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                </svg>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -558,6 +603,7 @@ export default function PlayGame() {
 function TypewriterText({ text, speed = 30 }) {
   const [displayedText, setDisplayedText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
     if (currentIndex < text.length) {
@@ -567,6 +613,8 @@ function TypewriterText({ text, speed = 30 }) {
       }, speed);
 
       return () => clearTimeout(timeout);
+    } else {
+      setIsComplete(true);
     }
   }, [currentIndex, text, speed]);
 
@@ -574,7 +622,14 @@ function TypewriterText({ text, speed = 30 }) {
   useEffect(() => {
     setDisplayedText("");
     setCurrentIndex(0);
+    setIsComplete(false);
   }, [text]);
 
-  return <div>{displayedText}</div>;
+  // Add a blinking cursor at the end if still typing
+  return (
+    <div className="whitespace-pre-wrap">
+      {displayedText}
+      {!isComplete && <span className="typing-cursor">|</span>}
+    </div>
+  );
 }
