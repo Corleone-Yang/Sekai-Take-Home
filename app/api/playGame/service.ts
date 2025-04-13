@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { UUID, randomUUID } from "crypto";
 // Note: For a production implementation, you would need to install and properly import LangGraph
 // Since we don't have the actual package installed, we'll mock the interface
@@ -77,24 +78,62 @@ const mockDB = {
   shortTermMemories: new Map<UUID, ShortTermMemory[]>(),
 };
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseAdmin = createClient(
+  supabaseUrl,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey
+);
+
 // Game Service Class
 export class PlayGameService {
   // Get all available stories
   async getStories(): Promise<GetStoriesResponse> {
-    // In a real implementation, this would query a database
-    const stories = Array.from(mockDB.stories.values());
-    return { stories };
+    try {
+      // Get stories from Supabase
+      const { data: stories, error } = await supabaseAdmin
+        .from("stories")
+        .select("*");
+
+      if (error) {
+        console.error("Error fetching stories:", error);
+        throw error;
+      }
+
+      return { stories: stories || [] };
+    } catch (error) {
+      console.error("Failed to fetch stories:", error);
+      // Fallback to mock data if there's an error
+      const stories = Array.from(mockDB.stories.values());
+      return { stories };
+    }
   }
 
   // Get characters for a specific story
   async getCharactersForStory(
     storyId: UUID
   ): Promise<GetCharactersForStoryResponse> {
-    // In a real implementation, this would query a database
-    const characters = Array.from(mockDB.characters.values()).filter(
-      (char) => char.story_id === storyId
-    );
-    return { characters };
+    try {
+      // Get characters from Supabase
+      const { data: characters, error } = await supabaseAdmin
+        .from("characters")
+        .select("*")
+        .eq("story_id", storyId);
+
+      if (error) {
+        console.error("Error fetching characters for story:", error);
+        throw error;
+      }
+
+      return { characters: characters || [] };
+    } catch (error) {
+      console.error("Failed to fetch characters for story:", error);
+      // Fallback to mock data if there's an error
+      const characters = Array.from(mockDB.characters.values()).filter(
+        (char) => char.story_id === storyId
+      );
+      return { characters };
+    }
   }
 
   // Select a character for the player and create a game session
@@ -535,3 +574,131 @@ export class PlayGameService {
 }
 
 export const playGameService = new PlayGameService();
+
+// Initialize mock data for testing
+// This is used as a fallback when the Supabase database is not available
+const initMockData = async () => {
+  try {
+    // Add some sample stories if none exist
+    const { stories } = await playGameService.getStories();
+
+    if (stories.length === 0) {
+      console.log("No stories found in database, initializing mock data");
+
+      // Sample story 1
+      const story1Id = randomUUID();
+      mockDB.stories.set(story1Id, {
+        story_id: story1Id,
+        title: "The Enchanted Forest",
+        background:
+          "A magical forest where animals talk and trees whisper secrets.",
+        character_num: 3,
+        created_at: new Date(),
+        updated_at: new Date(),
+        user_id: "user-123" as UUID,
+      });
+
+      // Sample story 2
+      const story2Id = randomUUID();
+      mockDB.stories.set(story2Id, {
+        story_id: story2Id,
+        title: "Space Adventures",
+        background: "Explore the galaxy with a crew of intrepid explorers.",
+        character_num: 4,
+        created_at: new Date(),
+        updated_at: new Date(),
+        user_id: "user-123" as UUID,
+      });
+
+      // Add characters for story 1
+      const char1Id = randomUUID();
+      mockDB.characters.set(char1Id, {
+        character_id: char1Id,
+        story_id: story1Id,
+        name: "Forest Ranger",
+        character:
+          "Brave, knowledgeable about the forest, and protective of nature.",
+        background:
+          "Grew up near the forest and has been its guardian for years.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const char2Id = randomUUID();
+      mockDB.characters.set(char2Id, {
+        character_id: char2Id,
+        story_id: story1Id,
+        name: "Wise Owl",
+        character: "Ancient, wise, and somewhat mysterious. Speaks in riddles.",
+        background:
+          "Has lived in the forest for centuries and knows all its secrets.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const char3Id = randomUUID();
+      mockDB.characters.set(char3Id, {
+        character_id: char3Id,
+        story_id: story1Id,
+        name: "Mischievous Fox",
+        character: "Clever, tricky, and playful. Always looking for adventure.",
+        background: "Known for playing pranks on other forest creatures.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      // Add characters for story 2
+      const char4Id = randomUUID();
+      mockDB.characters.set(char4Id, {
+        character_id: char4Id,
+        story_id: story2Id,
+        name: "Ship Captain",
+        character:
+          "Decisive, experienced, and fair. Takes responsibility seriously.",
+        background: "Veteran of many space expeditions.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const char5Id = randomUUID();
+      mockDB.characters.set(char5Id, {
+        character_id: char5Id,
+        story_id: story2Id,
+        name: "Ship Engineer",
+        character:
+          "Technical genius, slightly antisocial, focused on machines.",
+        background: "Can fix anything with minimal resources.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const char6Id = randomUUID();
+      mockDB.characters.set(char6Id, {
+        character_id: char6Id,
+        story_id: story2Id,
+        name: "Ship Doctor",
+        character: "Compassionate, detail-oriented, and somewhat sarcastic.",
+        background: "Has treated ailments from all over the galaxy.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const char7Id = randomUUID();
+      mockDB.characters.set(char7Id, {
+        character_id: char7Id,
+        story_id: story2Id,
+        name: "Alien Navigator",
+        character:
+          "Intuitive, mysterious, has unique perspectives on space travel.",
+        background: "From a species with natural navigation abilities.",
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+    }
+  } catch (error) {
+    console.error("Error initializing mock data:", error);
+  }
+};
+
+// Initialize mock data
+initMockData();
