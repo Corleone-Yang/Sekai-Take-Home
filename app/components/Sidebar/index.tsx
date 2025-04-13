@@ -13,10 +13,24 @@ import { supabase } from "../../config/supabase";
 import "./index.less";
 
 const Sidebar = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  // 从localStorage初始化collapsed状态，如果不存在则默认为false（展开状态）
+  const [collapsed, setCollapsed] = useState(() => {
+    // 在服务端渲染时不执行localStorage操作
+    if (typeof window !== "undefined") {
+      const savedState = localStorage.getItem("sidebar-collapsed");
+      return savedState ? JSON.parse(savedState) : false;
+    }
+    return false;
+  });
+
   const router = useRouter();
 
   useEffect(() => {
+    // 将collapsed状态保存到localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("sidebar-collapsed", JSON.stringify(collapsed));
+    }
+
     // Add or remove sidebar-collapsed class from body
     document.body.classList.toggle("sidebar-collapsed", collapsed);
 
