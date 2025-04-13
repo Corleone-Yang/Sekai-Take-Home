@@ -20,7 +20,6 @@ export default function CreateStory() {
     async function fetchUser() {
       const user = await getCurrentUser();
       if (user) {
-        console.log("Current user:", user.id); // Add log for debugging
         setUserId(user.id);
       } else {
         // If user is not logged in, show error
@@ -104,7 +103,7 @@ export default function CreateStory() {
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that all characters have names
+    // Validate all characters have names
     const missingNames = characters.some((char) => !char.name.trim());
     if (missingNames) {
       setMessage({
@@ -118,7 +117,8 @@ export default function CreateStory() {
     setMessage({ text: "", type: "" });
 
     try {
-      const response = await fetch("/api/createStory", {
+      // Create story with complete character details
+      const storyResponse = await fetch("/api/createStory", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,17 +128,23 @@ export default function CreateStory() {
           background: background || "",
           character_num: Number(characterNum),
           user_id: userId,
+          characters: characters.map((char) => ({
+            name: char.name,
+            character: char.character || "",
+            background: char.background || "",
+          })),
         }),
       });
 
-      const data = await response.json();
+      const storyData = await storyResponse.json();
 
-      if (response.ok) {
+      if (storyResponse.ok) {
         setMessage({
-          text: data.message || "Story created successfully!",
+          text: storyData.message || "Story created successfully!",
           type: "success",
         });
-        // Reset form and go back to step 1
+
+        // Reset form and return to step 1
         setTitle("");
         setBackground("");
         setCharacterNum(2);
@@ -146,7 +152,7 @@ export default function CreateStory() {
         setStep(1);
       } else {
         setMessage({
-          text: data.error || "Failed to create story",
+          text: storyData.error || "Failed to create story",
           type: "error",
         });
       }

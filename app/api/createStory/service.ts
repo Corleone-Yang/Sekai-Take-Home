@@ -4,6 +4,8 @@ import {
   CreateStoryRequest,
   CreateStoryResponse,
   DeleteStoryResponse,
+  DirectCharacterCreateRequest,
+  DirectCharacterCreateResponse,
   GetStoryResponse,
   UpdateStoryRequest,
   UpdateStoryResponse,
@@ -22,7 +24,12 @@ const supabaseAnon = createClient(
 // Admin client - using service role key, can bypass RLS policies
 // Note: Service role key must be a server-side environment variable, cannot be exposed to the client
 const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
-  ? createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY)
+  ? createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
   : supabaseAnon;
 
 export class StoryService {
@@ -33,9 +40,86 @@ export class StoryService {
     data: CreateStoryRequest
   ): Promise<CreateStoryResponse> {
     try {
-      console.log("Creating story with user_id:", data.user_id); // Add log for debugging
+      // Prepare character parameters
+      const charactersParam =
+        data.characters && data.characters.length > 0 ? data.characters : null;
 
-      // Use admin client to bypass RLS
+      // Try direct insert into stories table
+      try {
+        const { data: storyData, error: storyError } = await supabaseAdmin
+          .from("stories")
+          .insert({
+            title: data.title,
+            background: data.background || "",
+            character_num: data.character_num,
+            user_id: data.user_id,
+          })
+          .select()
+          .single();
+
+        if (storyError) {
+          console.error("Error during direct story insert:", storyError);
+          throw storyError;
+        }
+
+        const storyId = storyData.story_id as UUID;
+
+        // Create characters
+        if (charactersParam && charactersParam.length > 0) {
+          for (
+            let i = 0;
+            i < Math.min(charactersParam.length, data.character_num);
+            i++
+          ) {
+            try {
+              const { error: charError } = await supabaseAdmin
+                .from("characters")
+                .insert({
+                  story_id: storyId,
+                  name: charactersParam[i].name,
+                  character: charactersParam[i].character || "",
+                  background: charactersParam[i].background || "",
+                })
+                .select();
+
+              if (charError) {
+                console.error(`Error inserting character ${i}:`, charError);
+              }
+            } catch (charInsertError) {
+              console.error(
+                `Exception during character ${i} insert:`,
+                charInsertError
+              );
+            }
+          }
+        } else {
+          // Create default characters
+          for (let i = 1; i <= data.character_num; i++) {
+            try {
+              await supabaseAdmin.from("characters").insert({
+                story_id: storyId,
+                name: `Character ${i}`,
+              });
+            } catch (defaultCharError) {
+              console.error(
+                `Error creating default character ${i}:`,
+                defaultCharError
+              );
+            }
+          }
+        }
+
+        return {
+          success: true,
+          story_id: storyId,
+          message: `Story created successfully with ${data.character_num} characters`,
+        };
+      } catch (directInsertError) {
+        console.error("Direct insert approach failed:", directInsertError);
+        // Continue with RPC method if direct insert fails
+      }
+
+      // Try using RPC function
       const { data: result, error } = await supabaseAdmin.rpc(
         "create_story_with_characters",
         {
@@ -44,18 +128,21 @@ export class StoryService {
           background_param: data.background || "",
           character_num_param: data.character_num,
           user_id_param: data.user_id,
+          characters_param: charactersParam ? charactersParam : null,
         }
       );
 
       if (error) {
-        console.error("RPC error details:", error); // Add detailed error log
+        console.error("RPC error details:", error);
         throw error;
       }
 
+      const storyId = result as UUID;
+
       return {
         success: true,
-        story_id: result as UUID,
-        message: `Story created successfully, ${data.character_num} characters have been automatically generated`,
+        story_id: storyId,
+        message: `Story created successfully with ${data.character_num} characters`,
       };
     } catch (error) {
       console.error("Failed to create story:", error);
@@ -211,6 +298,122 @@ export class StoryService {
       };
     } catch (error) {
       console.error("Failed to delete story:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Directly create or update a character with provided details
+   */
+  static async directCreateOrUpdateCharacter(
+    data: DirectCharacterCreateRequest
+  ): Promise<DirectCharacterCreateResponse> {
+    try {
+      // Check if character_id exists
+      if (data.character_id) {
+        // Update existing character
+        const { data: updateResult, error: updateError } = await supabaseAdmin
+          .from("characters")
+          .update({
+            name: data.name,
+            character: data.character || "",
+            background: data.background || "",
+          })
+          .eq("character_id", data.character_id)
+          .eq("story_id", data.story_id)
+          .select();
+
+        if (updateError) {
+          console.error("Error updating character:", updateError);
+          throw updateError;
+        }
+
+        return {
+          success: true,
+          message: "Character updated successfully",
+          character_id: data.character_id,
+        };
+      } else {
+        // Try to find an existing character by story_id and default name pattern that matches position
+        try {
+          // First get all characters for this story
+          const { data: existingChars, error: fetchError } = await supabaseAdmin
+            .from("characters")
+            .select("*")
+            .eq("story_id", data.story_id)
+            .order("created_at", { ascending: true });
+
+          if (fetchError) {
+            console.error("Error fetching existing characters:", fetchError);
+            throw fetchError;
+          }
+
+          // Check if there's a character with default name pattern we can update
+          if (existingChars && existingChars.length > 0) {
+            // Try to find a character with name 'Character X'
+            for (let i = 1; i <= existingChars.length; i++) {
+              const defaultName = `Character ${i}`;
+              const characterToUpdate = existingChars.find(
+                (c) => c.name === defaultName
+              );
+
+              if (characterToUpdate) {
+                const { data: updateResult, error: updateError } =
+                  await supabaseAdmin
+                    .from("characters")
+                    .update({
+                      name: data.name,
+                      character: data.character || "",
+                      background: data.background || "",
+                    })
+                    .eq("character_id", characterToUpdate.character_id)
+                    .eq("story_id", data.story_id)
+                    .select();
+
+                if (updateError) {
+                  console.error("Error updating found character:", updateError);
+                  continue; // Try to create a new one
+                }
+
+                return {
+                  success: true,
+                  message: "Character updated successfully",
+                  character_id: characterToUpdate.character_id,
+                };
+              }
+            }
+          }
+
+          // If we couldn't find a character to update, create a new one
+        } catch (findError) {
+          console.error("Error finding character to update:", findError);
+          // Continue to create a new character
+        }
+
+        // Insert new character
+        const { data: insertResult, error: insertError } = await supabaseAdmin
+          .from("characters")
+          .insert({
+            story_id: data.story_id,
+            name: data.name,
+            character: data.character || "",
+            background: data.background || "",
+          })
+          .select();
+
+        if (insertError) {
+          console.error("Error creating character:", insertError);
+          throw insertError;
+        }
+
+        return {
+          success: true,
+          message: "Character created successfully",
+          character_id: insertResult[0].character_id,
+        };
+      }
+    } catch (error) {
+      console.error("Failed to create/update character:", error);
       throw error;
     }
   }

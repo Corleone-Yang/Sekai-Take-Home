@@ -28,6 +28,11 @@ export interface CreateStoryRequest {
   background?: string;
   character_num: number;
   user_id: UUID;
+  characters?: {
+    name: string;
+    character?: string;
+    background?: string;
+  }[];
 }
 
 // Create story response interface
@@ -70,4 +75,20 @@ export interface GetStoryResponse {
 export interface DeleteStoryResponse {
   success: boolean;
   message: string;
+}
+
+// Direct character creation request interface
+export interface DirectCharacterCreateRequest {
+  character_id: UUID;
+  story_id: UUID;
+  name: string;
+  character?: string;
+  background?: string;
+}
+
+// Direct character creation response interface
+export interface DirectCharacterCreateResponse {
+  success: boolean;
+  message: string;
+  character_id?: UUID;
 }

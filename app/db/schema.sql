@@ -109,11 +109,17 @@ CREATE OR REPLACE FUNCTION create_story_with_characters(
     title_param TEXT,
     background_param TEXT,
     character_num_param INTEGER,
-    user_id_param UUID
+    user_id_param UUID,
+    characters_param JSONB DEFAULT NULL
 )
 RETURNS UUID AS $$
 DECLARE
     new_story_id UUID;
+    i INTEGER;
+    char_data JSONB;
+    char_name TEXT;
+    char_character TEXT;
+    char_background TEXT;
 BEGIN
     -- Insert the story
     INSERT INTO stories (
@@ -128,8 +134,33 @@ BEGIN
         user_id_param
     ) RETURNING story_id INTO new_story_id;
     
-    -- Create the specified number of characters
-    PERFORM create_characters_for_story(new_story_id, character_num_param);
+    -- If characters_param is provided, use it to create characters
+    IF characters_param IS NOT NULL AND jsonb_array_length(characters_param) > 0 THEN
+        FOR i IN 0..jsonb_array_length(characters_param) - 1 LOOP
+            char_data := characters_param -> i;
+            char_name := char_data ->> 'name';
+            char_character := char_data ->> 'character';
+            char_background := char_data ->> 'background';
+            
+            -- Only create up to character_num_param characters
+            IF i < character_num_param THEN
+                INSERT INTO characters (
+                    story_id,
+                    name,
+                    character,
+                    background
+                ) VALUES (
+                    new_story_id,
+                    char_name,
+                    COALESCE(char_character, ''),
+                    COALESCE(char_background, '')
+                );
+            END IF;
+        END LOOP;
+    ELSE
+        -- Create default characters if no character details provided
+        PERFORM create_characters_for_story(new_story_id, character_num_param);
+    END IF;
     
     RETURN new_story_id;
 END;
