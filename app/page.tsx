@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Edit from "./components/Edit";
 import Sidebar from "./components/Sidebar";
 import { getCurrentUser, supabase } from "./config/supabase";
 
@@ -11,6 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
+  const [editingStoryId, setEditingStoryId] = useState(null);
 
   // Get current user and load stories on component mount
   useEffect(() => {
@@ -124,9 +126,14 @@ export default function Home() {
     }
   };
 
-  // Handle edit story
+  // Handle edit story - now opens the Edit component
   const handleEditStory = (storyId) => {
-    router.push(`/pages/editStory/${storyId}`);
+    setEditingStoryId(storyId);
+  };
+
+  // Close edit modal
+  const handleCloseEdit = () => {
+    setEditingStoryId(null);
   };
 
   // Format date for display
@@ -236,6 +243,21 @@ export default function Home() {
           )}
         </div>
       </main>
+
+      {/* Edit Story Modal */}
+      {editingStoryId && (
+        <Edit
+          storyId={editingStoryId}
+          onClose={handleCloseEdit}
+          onSave={() => {
+            setMessage({
+              text: "Story updated successfully",
+              type: "success",
+            });
+            fetchStories(userId);
+          }}
+        />
+      )}
 
       <style jsx global>{`
         .heading-style {
