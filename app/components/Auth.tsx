@@ -29,16 +29,6 @@ export default function Auth({ onAuth }: AuthProps) {
 
       if (error) throw error;
 
-      const button = e.currentTarget.querySelector(
-        ".auth-submit-button"
-      ) as HTMLButtonElement;
-      if (button) {
-        button.style.backgroundColor = "#6d28d9";
-        setTimeout(() => {
-          button.style.backgroundColor = "";
-        }, 300);
-      }
-
       setMessage("Signed in successfully!");
       if (onAuth) onAuth();
     } catch (error: any) {
@@ -61,16 +51,6 @@ export default function Auth({ onAuth }: AuthProps) {
       });
 
       if (error) throw error;
-
-      const button = e.currentTarget.querySelector(
-        ".auth-submit-button"
-      ) as HTMLButtonElement;
-      if (button) {
-        button.style.backgroundColor = "#6d28d9";
-        setTimeout(() => {
-          button.style.backgroundColor = "";
-        }, 300);
-      }
 
       setMessage("Check your email for the confirmation link!");
     } catch (error: any) {
