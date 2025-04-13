@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { UUID, randomUUID } from "crypto";
+import { generateGeminiResponse } from "../../config/gemini";
 // Note: For a production implementation, you would need to install and properly import LangGraph
 // Since we don't have the actual package installed, we'll mock the interface
 // import { StateGraph } from "langchain/langgraph";
@@ -480,96 +481,228 @@ export class PlayGameService {
   private async mockLLMGatewayProcessing(
     request: LLMGatewayRequest
   ): Promise<LLMGatewayResponse> {
-    // In production, this would call an LLM to extract and process memories
+    try {
+      // Extract the latest dialog message
+      const latestMessage =
+        request.dialog_context[request.dialog_context.length - 1];
 
-    // Create a basic short-term memory from the latest dialog context
-    const latestMessage =
-      request.dialog_context[request.dialog_context.length - 1];
+      // Create a short-term memory from the latest dialog
+      const newShortTermMemory: ShortTermMemory = {
+        memory_id: randomUUID(),
+        session_id: randomUUID(), // In production, this would be the actual session ID
+        character_id: request.character_id,
+        type: MemoryType.SHORT_TERM,
+        content: latestMessage.content,
+        created_at: new Date(),
+        importance: 5, // Medium importance
+        turn_number: request.dialog_context.length,
+        forgotten: false,
+      };
 
-    const newShortTermMemory: ShortTermMemory = {
-      memory_id: randomUUID(),
-      session_id: mockDB.sessions.keys().next().value,
-      character_id: request.character_id,
-      type: MemoryType.SHORT_TERM,
-      content: `${latestMessage.character_name} said: ${latestMessage.content}`,
-      created_at: new Date(),
-      importance: 8, // High importance for recent messages
-      turn_number: request.dialog_context.length,
-      forgotten: false,
-    };
+      // For more complex implementations, we could use Gemini to analyze the importance
+      // of memories and assign importance scores
+      const characterMemoriesPrompt = `
+Extract the most important information from this message that a character should remember:
+"${latestMessage.content}"
 
-    return {
-      processed_long_term: request.long_term_memory, // No changes to long-term memory
-      processed_short_term: [newShortTermMemory],
-    };
+Output only a brief summary of what should be remembered, in 1-2 sentences maximum.
+`;
+
+      try {
+        // Generate a more meaningful memory with Gemini
+        const enhancedMemory = await generateGeminiResponse(
+          characterMemoriesPrompt
+        );
+
+        // Update the memory content with the enhanced version
+        newShortTermMemory.content = enhancedMemory;
+        newShortTermMemory.importance = 7; // Higher importance for processed memory
+      } catch (error) {
+        console.error("Error enhancing memory with Gemini:", error);
+        // If Gemini fails, we'll use the original content
+      }
+
+      return {
+        processed_long_term: request.long_term_memory, // No changes to long-term memory
+        processed_short_term: [newShortTermMemory],
+      };
+    } catch (error) {
+      console.error("Error in LLM Gateway processing:", error);
+
+      // Fallback to basic processing
+      const latestMessage =
+        request.dialog_context[request.dialog_context.length - 1];
+
+      const newShortTermMemory: ShortTermMemory = {
+        memory_id: randomUUID(),
+        session_id: randomUUID(),
+        character_id: request.character_id,
+        type: MemoryType.SHORT_TERM,
+        content: latestMessage.content,
+        created_at: new Date(),
+        importance: 5,
+        turn_number: request.dialog_context.length,
+        forgotten: false,
+      };
+
+      return {
+        processed_long_term: request.long_term_memory,
+        processed_short_term: [newShortTermMemory],
+      };
+    }
   }
 
   private async mockForgetGatewayProcessing(
     request: ForgetGatewayRequest
   ): Promise<ForgetGatewayResponse> {
-    // In production, this would call an LLM to consolidate memories
+    try {
+      // Extract memories that need consolidation
+      const { short_term_memories, threshold } = request;
+      const toKeep = Math.floor(threshold / 2);
 
-    // Simple implementation: keep the first few and last few memories
-    const { short_term_memories, threshold } = request;
-    const toKeep = Math.floor(threshold / 2);
+      // Keep first few and last few memories
+      const firstMemories = short_term_memories.slice(0, toKeep);
+      const lastMemories = short_term_memories.slice(-toKeep);
 
-    // Keep first few and last few memories
-    const firstMemories = short_term_memories.slice(0, toKeep);
-    const lastMemories = short_term_memories.slice(-toKeep);
+      // Get middle memories for consolidation
+      const middleStartIdx = toKeep;
+      const middleEndIdx = short_term_memories.length - toKeep;
 
-    // Create a single consolidated memory for the middle section
-    const middleStartIdx = toKeep;
-    const middleEndIdx = short_term_memories.length - toKeep;
+      if (middleStartIdx < middleEndIdx) {
+        const middleMemories = short_term_memories.slice(
+          middleStartIdx,
+          middleEndIdx
+        );
 
-    if (middleStartIdx < middleEndIdx) {
-      const middleMemories = short_term_memories.slice(
-        middleStartIdx,
-        middleEndIdx
-      );
+        // Create a consolidated memory using Gemini
+        const memoryConsolidationPrompt = `
+Summarize the following information into a concise and memorable summary:
 
-      // Create a consolidated memory summary
-      const consolidatedMemory: ShortTermMemory = {
-        memory_id: randomUUID(),
-        session_id: short_term_memories[0].session_id,
-        character_id: request.character_id,
-        type: MemoryType.SHORT_TERM,
-        content: `Conversation summary of turns ${middleStartIdx} to ${middleEndIdx}: [Summary would be generated by LLM]`,
-        created_at: new Date(),
-        importance: 7,
-        turn_number: middleStartIdx,
-        forgotten: true, // Marked as processed by forget gateway
-      };
+${middleMemories.map((memory) => `- ${memory.content}`).join("\n")}
 
+Provide a single paragraph summary (2-3 sentences) that captures the most important points.
+`;
+
+        try {
+          // Generate a consolidated memory with Gemini
+          const consolidatedContent = await generateGeminiResponse(
+            memoryConsolidationPrompt
+          );
+
+          // Create the consolidated memory
+          const consolidatedMemory: ShortTermMemory = {
+            memory_id: randomUUID(),
+            session_id: short_term_memories[0].session_id,
+            character_id: request.character_id,
+            type: MemoryType.SHORT_TERM,
+            content: consolidatedContent,
+            created_at: new Date(),
+            importance: 8, // Higher importance for consolidated memory
+            turn_number: middleStartIdx,
+            forgotten: true, // Marked as processed by forget gateway
+          };
+
+          return {
+            consolidated_memories: [
+              ...firstMemories,
+              consolidatedMemory,
+              ...lastMemories,
+            ],
+          };
+        } catch (error) {
+          console.error("Error consolidating memories with Gemini:", error);
+          // Fall through to basic consolidation if Gemini fails
+        }
+
+        // Fallback consolidated memory
+        const consolidatedMemory: ShortTermMemory = {
+          memory_id: randomUUID(),
+          session_id: short_term_memories[0].session_id,
+          character_id: request.character_id,
+          type: MemoryType.SHORT_TERM,
+          content: `Conversation summary of turns ${middleStartIdx} to ${middleEndIdx}.`,
+          created_at: new Date(),
+          importance: 7,
+          turn_number: middleStartIdx,
+          forgotten: true,
+        };
+
+        return {
+          consolidated_memories: [
+            ...firstMemories,
+            consolidatedMemory,
+            ...lastMemories,
+          ],
+        };
+      }
+
+      // If there's not enough to consolidate, just return the original memories
       return {
-        consolidated_memories: [
-          ...firstMemories,
-          consolidatedMemory,
-          ...lastMemories,
-        ],
+        consolidated_memories: short_term_memories,
+      };
+    } catch (error) {
+      console.error("Error in Forget Gateway processing:", error);
+
+      // Return original memories if there's an error
+      return {
+        consolidated_memories: request.short_term_memories,
       };
     }
-
-    // If there's not enough to consolidate, just return the original memories
-    return {
-      consolidated_memories: short_term_memories,
-    };
   }
 
   private async mockCharacterResponse(
     state: CharacterAgentState
   ): Promise<DialogMessage> {
-    // In production, this would call an LLM with the character's personality and memories
+    try {
+      // Get the latest player message
+      const playerMessage =
+        state.current_context[state.current_context.length - 1];
 
-    // Create a basic response
-    const playerMessage =
-      state.current_context[state.current_context.length - 1];
+      // Create a prompt for Gemini
+      const prompt = `
+You are roleplaying as a character named "${
+        state.character_name
+      }" in an interactive story.
 
-    return {
-      character_id: state.character_id,
-      character_name: state.character_name,
-      content: `[${state.character_name} would respond to "${playerMessage.content}" based on their personality and memories]`,
-      timestamp: new Date(),
-    };
+Character Information:
+- Personality: ${state.personality}
+- Background: ${state.background}
+
+Recent memories and context:
+${state.short_term_memories
+  .slice(-5)
+  .map((memory) => `- ${memory.content}`)
+  .join("\n")}
+
+The player just said: "${playerMessage.content}"
+
+Respond in first person as ${
+        state.character_name
+      }, staying true to the character's personality and background. 
+Keep your response concise (1-3 sentences) and conversational.
+Do not use quotation marks or labels for who is speaking.
+`;
+
+      // Call Gemini API to generate a response
+      const response = await generateGeminiResponse(prompt);
+
+      return {
+        character_id: state.character_id,
+        character_name: state.character_name,
+        content: response,
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      console.error("Error generating character response:", error);
+
+      // Fallback response if Gemini fails
+      return {
+        character_id: state.character_id,
+        character_name: state.character_name,
+        content: `I'm not sure how to respond to that right now.`,
+        timestamp: new Date(),
+      };
+    }
   }
 }
 

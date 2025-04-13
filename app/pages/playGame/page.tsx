@@ -174,7 +174,7 @@ export default function PlayGame() {
       // Add player message to the chat
       const playerMessage = {
         type: "player",
-        character_name: selectedCharacter.name,
+        character_name: selectedCharacter?.name || "You",
         content: newMessage,
         timestamp: new Date(),
       };
@@ -189,16 +189,16 @@ export default function PlayGame() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          game_session_id: gameSessionId,
+          game_session_id: gameSessionId || "test-session-id", // Use test session if no real session
           message: newMessage,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Failed to send message");
+      }
 
       // Add responses from NPCs with a slight delay for the typing effect
       if (data.responses && data.responses.length > 0) {
@@ -215,7 +215,7 @@ export default function PlayGame() {
               character_id: npcResponse.character_id,
               character_name: npcResponse.character_name,
               content: npcResponse.content,
-              timestamp: new Date(npcResponse.timestamp),
+              timestamp: new Date(npcResponse.timestamp || Date.now()),
             },
           ]);
         }
@@ -227,7 +227,8 @@ export default function PlayGame() {
       const isPlayerTurnNow =
         lastResponse.includes("?") ||
         lastResponse.includes("What do you do?") ||
-        lastResponse.includes("Your turn");
+        lastResponse.includes("Your turn") ||
+        data.responses.length > 0; // Always player's turn after a response
 
       setIsPlayerTurn(isPlayerTurnNow);
     } catch (error) {
