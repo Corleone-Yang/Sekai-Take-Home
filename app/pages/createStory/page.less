@@ -119,6 +119,15 @@
   color: #3a2921;
 }
 
+/* Style for placeholder text to make it look like virtual/phantom text */
+.fantasy-input::placeholder {
+  color: rgba(91, 58, 28, 0.5);
+  font-style: italic;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  text-shadow: 0.5px 0.5px 1px rgba(91, 58, 28, 0.1);
+}
+
 .fantasy-textarea {
   background-color: rgba(255, 252, 245, 0.9);
   border: 1px solid #c4aa78;
@@ -127,6 +136,15 @@
   width: 100%;
   color: #3a2921;
   min-height: 100px;
+}
+
+/* Style for textarea placeholder as well */
+.fantasy-textarea::placeholder {
+  color: rgba(91, 58, 28, 0.5);
+  font-style: italic;
+  font-weight: normal;
+  letter-spacing: 0.5px;
+  text-shadow: 0.5px 0.5px 1px rgba(91, 58, 28, 0.1);
 }
 
 .fantasy-table-row {
@@ -139,12 +157,16 @@
 }
 
 .character-title {
-  color: #5b3a1c;
-  font-family: 'Cinzel', 'Times New Roman', serif;
+  color: rgba(91, 58, 28, 0.5);
+  font-family: inherit;
+  font-weight: normal;
+  font-style: italic;
   font-size: 1.2rem;
   margin-bottom: 12px;
   border-bottom: 1px solid #e6d6b8;
   padding-bottom: 8px;
+  text-shadow: 0.5px 0.5px 1px rgba(91, 58, 28, 0.1);
+  letter-spacing: 0.5px;
 }
 
 .error-message {

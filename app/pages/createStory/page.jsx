@@ -38,7 +38,7 @@ export default function CreateStory() {
       const newCharacters = Array(characterNum)
         .fill(null)
         .map((_, index) => ({
-          name: `Character ${index + 1}`,
+          name: "",
           character: "",
           background: "",
         }));
@@ -306,7 +306,7 @@ export default function CreateStory() {
                                   e.target.value
                                 )
                               }
-                              placeholder="Enter character name"
+                              placeholder={`Character ${index + 1}`}
                               className="fantasy-input"
                               required
                             />
