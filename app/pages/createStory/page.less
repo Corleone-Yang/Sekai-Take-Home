@@ -83,6 +83,15 @@
   margin: 0 12px;
 }
 
+.button-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  position: relative;
+  bottom: auto;
+}
+
 .primary-button {
   background: linear-gradient(to bottom, #8b6a43, #634c2e);
   color: #fffaea;
@@ -92,16 +101,22 @@
   font-weight: bold;
   letter-spacing: 0.5px;
   border-radius: 6px;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
   text-transform: uppercase;
   padding: 8px 16px;
   cursor: pointer;
+  position: relative;
 }
 
 .primary-button:hover {
   background: linear-gradient(to bottom, #9d7a4e, #735c3d);
-  transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.primary-button:active {
+  background: linear-gradient(to bottom, #8b6a43, #5a442a);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+  transform: none;
 }
 
 .secondary-button {
@@ -112,7 +127,7 @@
   font-weight: bold;
   letter-spacing: 0.5px;
   border-radius: 6px;
-  transition: all 0.3s ease;
+  transition: all 0.2s;
   text-transform: uppercase;
   padding: 8px 16px;
   cursor: pointer;
@@ -120,8 +135,13 @@
 
 .secondary-button:hover {
   background: linear-gradient(to bottom, #f5eee0, #e0d1b5);
-  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(139, 106, 67, 0.15);
+}
+
+.secondary-button:active {
+  background: linear-gradient(to bottom, #e5dbc8, #c9b99d);
+  box-shadow: inset 0 2px 4px rgba(139, 106, 67, 0.15);
+  transform: none;
 }
 
 .character-card {

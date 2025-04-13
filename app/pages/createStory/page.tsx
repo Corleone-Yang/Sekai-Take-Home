@@ -361,22 +361,22 @@ export default function CreateStory() {
                   </div>
                 ))}
 
-                <div className="flex justify-between mt-6">
+                <div className="button-container">
                   <button
                     type="button"
                     onClick={handleBack}
-                    className="secondary-button"
+                    className="secondary-button mr-4"
                   >
                     Back to Story Details
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`primary-button ${
-                      loading ? "opacity-70 cursor-not-allowed" : ""
-                    }`}
+                    className="primary-button"
                   >
-                    {loading ? "Creating..." : "Create Story with Characters"}
+                    {loading
+                      ? "Creating Story..."
+                      : "Create Story with Characters"}
                   </button>
                 </div>
               </form>

@@ -29,6 +29,16 @@ export default function Auth({ onAuth }: AuthProps) {
 
       if (error) throw error;
 
+      const button = e.currentTarget.querySelector(
+        ".auth-submit-button"
+      ) as HTMLButtonElement;
+      if (button) {
+        button.style.backgroundColor = "#6d28d9";
+        setTimeout(() => {
+          button.style.backgroundColor = "";
+        }, 300);
+      }
+
       setMessage("Signed in successfully!");
       if (onAuth) onAuth();
     } catch (error: any) {
@@ -51,6 +61,16 @@ export default function Auth({ onAuth }: AuthProps) {
       });
 
       if (error) throw error;
+
+      const button = e.currentTarget.querySelector(
+        ".auth-submit-button"
+      ) as HTMLButtonElement;
+      if (button) {
+        button.style.backgroundColor = "#6d28d9";
+        setTimeout(() => {
+          button.style.backgroundColor = "";
+        }, 300);
+      }
 
       setMessage("Check your email for the confirmation link!");
     } catch (error: any) {
@@ -108,13 +128,19 @@ export default function Auth({ onAuth }: AuthProps) {
           </div>
         </div>
 
-        <button type="submit" className="auth-submit-button" disabled={loading}>
-          {loading
-            ? "Casting Spell..."
-            : isSignUp
-            ? "Begin Your Quest"
-            : "Enter the Realm"}
-        </button>
+        <div className="auth-button-container">
+          <button
+            type="submit"
+            className="auth-submit-button"
+            disabled={loading}
+          >
+            {loading
+              ? "Casting Spell..."
+              : isSignUp
+              ? "Begin Your Quest"
+              : "Enter the Realm"}
+          </button>
+        </div>
       </form>
 
       <div className="auth-toggle">
